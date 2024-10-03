@@ -1,0 +1,3 @@
+# Float32Stamped
+std_msgs/Header header 
+float32 value

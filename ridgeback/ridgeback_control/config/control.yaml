@@ -1,0 +1,203 @@
+ridgeback_joint_publisher:
+  type: "joint_state_controller/JointStateController"
+  publish_rate: 50
+
+ridgeback_velocity_controller:
+  type: "mecanum_drive_controller/MecanumDriveController"
+  front_left_wheel_joint: "front_left_wheel"
+  back_left_wheel_joint: "rear_left_wheel"
+  front_right_wheel_joint: "front_right_wheel"
+  back_right_wheel_joint: "rear_right_wheel"
+  publish_rate: 50
+  pose_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 0.03]
+  twist_covariance_diagonal: [0.001, 0.001, 0.001, 1000000.0, 1000000.0, 0.03]
+  cmd_vel_timeout: 0.25
+
+  # Override URDF look-up for wheel separation since the parent link is not the base_link.
+  wheel_separation_x: 0.638
+  wheel_separation_y: 0.551
+
+  # Odometry fused with IMU is published by robot_localization, so
+  # no need to publish a TF based on encoders alone.
+  enable_odom_tf: true
+
+  # Wheel separation and radius multipliers
+  wheel_separation_multiplier: 1.0 # default: 1.0
+  wheel_radius_multiplier    : 1.0 # default: 1.0
+
+  # Velocity and acceleration limits
+  # Whenever a min_* is unspecified, default to -max_*
+  linear:
+    x:
+      has_velocity_limits    : true
+      max_velocity           : 1.1   # m/s
+      has_acceleration_limits: true
+      max_acceleration       : 2.5   # m/s^2
+    y:
+      has_velocity_limits    : true
+      max_velocity           : 1.1   # m/s
+      has_acceleration_limits: true
+      max_acceleration       : 2.5   # m/s^2
+  angular:
+    z:
+      has_velocity_limits    : true
+      max_velocity           : 2.0   # rad/s
+      has_acceleration_limits: true
+      max_acceleration       : 1.0   # rad/s^2
+
+ekf_localization:
+  frequency: 50
+  two_d_mode: true
+  odom0: /ridgeback_velocity_controller/odom
+  odom0_config: [false, false, false,
+                 false, false, false,
+                 true, true, false,
+                 false, false, true,
+                 false, false, false]
+  odom0_differential: false
+  imu0: /imu/data
+  imu0_config: [false, false, false,
+                false, false, false,
+                false, false, false,
+                false, false, true,
+                true, true, false]
+  imu0_differential: false
+  odom_frame: odom
+  base_link_frame: base_link
+  world_frame: odom
+joint_publisher:
+  type: "joint_state_controller/JointStateController"
+  publish_rate: 50
+
+manipulation_controller:
+  type: royalpanda/RoyalPandaControllerRos
+  simulation: false
+  fixed_base: $(arg fixed_base)
+
+  arm_id: panda
+  joint_names: [ "panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5", "panda_joint6", "panda_joint7" ]
+  i_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]  # this is actually an integral gain
+  d_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+  arm_I_max: 0.1
+
+  base_K_gains: [10.0, 10.0, 10.0]
+  base_I_gains: [1.0, 1.0, 1.0]
+  I_max: 0.0
+  base_filter_alpha: 0.0
+  
+  publish_rate: 10.0
+  coriolis_factor: 1.0
+
+  state_topic: /observer/state
+  base_twist_topic: /ridgeback_velocity_controller/cmd_vel
+
+  policy_update_rate: 0.0  # execute as fast as possible
+  reference_update_rate: 10.0
+  publish_ros: true
+  ros_publish_rate: 10.0
+  static_optimization: false
+
+  # cost stuff
+  linear_weight: 300.0
+  linear_weight_opening: 300.0 # 30 
+
+  angular_weight: 10.0
+  angular_weight_opening: 20.0 # 5
+
+  obstacle_weight: 100
+  obstacle_weight_slope: 10
+  obstacle_radius: 0.8
+
+  contact_weight: 10.0
+
+  max_reach: 1.0
+  reach_weight: 0
+  reach_weight_slope: 0
+
+  object_weight: 50
+  object_tolerance: 0.01
+
+  grasp_translation_offset: [0.0, 0.0, 0.0]
+  grasp_orientation_offset: [0, -0.7071068, 0, 0.7071068]    # -90deg around y
+
+  upper_joint_limits: [2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973]
+  lower_joint_limits: [-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973]
+  joint_limit_cost: 100 #1000
+  joint_limit_slope: 10 #100
+  object_reference_position: 1.57   
+
+  base_gains:
+    kp: [0.0, 0.0, 0.0]
+    kd: [1000.0, 1000.0, 1000.0]
+
+  arm_gains: 
+    kp: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    kd: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+
+  gripper_gains:
+    kp: [100.0, 100.0]
+    kd: [50.0, 50.0]
+
+manipulation_controller_sim:
+  type: royalpanda/RoyalPandaControllerRos
+  simulation: true
+  fixed_base: $(arg fixed_base)
+  linear_weight: 10.0
+  angular_weight: 1.0
+  obstacle_radius: 0.1
+
+  grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
+  grasp_orientation_offset: [ 0, -0.7071068, 0, 0.7071068]    # -90deg around y
+
+  object_reference_position: 1.50   #  85 deg, slightly less than the limit (90 deg)
+
+  arm_id: panda
+  joint_names: [ "panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5", "panda_joint6", "panda_joint7" ]
+  k_gains: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # this is actually an integral gain
+  d_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+
+  base_K_gains: [10.0, 10.0, 10.0]
+  base_I_gains: [0.01, 0.01, 0.01]
+  I_max: 1.0
+
+  base_filter_alpha: 0.0
+
+  publish_rate: 10.0
+  coriolis_factor: 1.0
+
+  state_topic: /observer/state
+  base_twist_topic: /ridgeback_velocity_controller/cmd_vel
+
+  policy_update_rate: 0.0  # execute as fast as possible
+  reference_update_rate: 10.0
+  publish_ros: true
+  ros_publish_rate: 10.0
+  static_optimization: false
+
+panda_position_controller:
+  type: effort_controllers/JointTrajectoryController
+  joints:
+    - panda_joint1
+    - panda_joint2
+    - panda_joint3
+    - panda_joint4
+    - panda_joint5
+    - panda_joint6
+    - panda_joint7
+  constraints:
+    goal_time: 10.0
+  gains:
+    panda_joint1:
+      pid: { p: 12000, d: 50, i: 0.0, i_clamp: 10000 }
+    panda_joint2:
+      pid: { p: 30000, d: 100, i: 0.02, i_clamp: 10000 }
+    panda_joint3:
+      pid: { p: 18000, d: 50, i: 0.01, i_clamp: 1 }
+    panda_joint4:
+      pid: { p: 18000, d: 70, i: 0.01, i_clamp: 10000 }
+    panda_joint5:
+      pid: { p: 12000, d: 70, i: 0.01, i_clamp: 1 }
+    panda_joint6:
+      pid: { p: 7000, d: 50, i: 0.01, i_clamp: 1 }
+    panda_joint7:
+      pid: { p: 2000, d: 20, i: 0.0, i_clamp: 1 }

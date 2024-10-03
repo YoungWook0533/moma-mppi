@@ -1,0 +1,10 @@
+*.csv
+*.bag
+.idea/
+.vscode/
+cmake-build-release/
+cmake-build-debug/
+*.so
+*.silo
+.ipynb_checkpoints/
+*.png

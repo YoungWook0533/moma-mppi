@@ -1,0 +1,44 @@
+dynamics:
+  mass_cart: 1.0
+  mass_pendulum: 0.5
+  length: 1.0
+  linear_friction: 1.0
+  angular_friction: 0.7
+  substep_size: 0.01
+
+solver:
+  rollouts: 200
+  lambda: 0.0001 #0.001
+  h: 10.0
+  step_size: 0.01
+  horizon: 2.0
+
+  cost_ratio: 0.2
+  caching_factor: 0.1
+  substeps: 1
+
+  filtering: false
+  filters_order: [1]
+  filters_window: [1]
+
+  adaptive_sampling: false
+  input_variance: [10.0 ]
+
+  discount_factor: 1.0
+  verbose: false
+  threads: 1  # it works only with one thread ... investigate this further
+  debug_print: false
+
+  bound_input: true
+  u_min: [-1.0, -1.0]
+  u_max: [1.0, 1.0]
+
+  log_data: false
+
+policy_update_rate: 0.0  # execute as fast as possible
+reference_update_rate: 10.0
+publish_ros: true
+ros_publish_rate: 10.0
+
+static_optimization: false
+sim_dt: 0.01

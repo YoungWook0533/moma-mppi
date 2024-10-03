@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Load common control configurations -->
+    <rosparam command="load" file="$(find ridgeback_control)/config/control.yaml" />
+
+    
+
+    <!-- Spawn the controllers -->
+    <node name="controller_spawner" pkg="controller_manager" type="spawner"
+          args="joint_publisher ridgeback_velocity_controller panda_position_controller" />
+
+    <!-- Relay velocity commands -->
+    <node pkg="topic_tools" type="relay" name="cmd_vel_relay"
+          args="/ridgeback_velocity_controller/cmd_vel /cmd_vel" />
+   
+    <!-- Launch the controller node -->
+    <node pkg="mppi_royalpanda" type="controller_node" name="manipulation_controller_sim" output="screen" />
+    <node pkg="mppi_royalpanda" type="input_to_controller" name="input_to_controller_node" output="screen" />
+
+</launch>
