@@ -43,6 +43,10 @@ add_library(${PROJECT_NAME}_controller
 target_include_directories(${PROJECT_NAME}_controller PUBLIC ${catkin_INCLUDE_DIRS} ${Franka_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}_controller ${catkin_LIBRARIES} ${Franka_LIBRARIES})
 
+### SSV model for collision avoidance
+add_executable(ssv_model src/nodes/ssv_model.cpp)
+target_link_libraries(ssv_model ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES})
+
 ### Standalone controller node using ROS to communicate
 add_executable(controller_node src/nodes/controller_node.cpp)
 target_link_libraries(controller_node ${catkin_LIBRARIES})

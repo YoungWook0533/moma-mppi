@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
   ros::NodeHandle nh("~");
 
   ros::Publisher twist_talker = nh.advertise<nav_msgs::Odometry>(
-      "/ridgeback_velocity_controller/odom", 1);
+      "/robotnik_base_control/odom", 1);
   ros::Publisher base_tf_publisher = nh.advertise<nav_msgs::Odometry>(
       "/panda_base/vrpn_client/estimated_odometry", 1);
   ros::Publisher handle_tf_publisher = nh.advertise<nav_msgs::Odometry>(

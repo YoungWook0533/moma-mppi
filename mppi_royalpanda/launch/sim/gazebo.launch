@@ -49,7 +49,7 @@
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="debug" value="false"/>
         <arg name="gui" value="true"/>
-        <arg name="world_name" value="$(find mppi_manipulation)/config/gazebo/empty.world"/>
+        <arg name="world_name" value="$(find mppi_royalpanda)/config/gazebo/test_zone.world"/>
         <arg name="use_sim_time" value="true"/>
         <arg name="headless" value="false"/>
         <arg name="paused" value="false"/>
@@ -76,9 +76,9 @@
         <param name="delay_sec" value="5.0"/>
     </node> -->
 
-    <node name="vicon_emulator_node" type="vicon_emulator_node" pkg="mppi_royalpanda" output="screen"/>
+    <!-- <node name="vicon_emulator_node" type="vicon_emulator_node" pkg="mppi_royalpanda" output="screen"/> -->
     <node name="joint_state_filter_node" type="joint_state_filter_node" pkg="mppi_royalpanda" output="screen"/>
 
-    <node pkg="tf2_ros" type="static_transform_publisher" name="world_odom_publisher" args="0 0 0 0 0 0 world odom"
-          output="screen"/>
+    <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="world_odom_publisher" args="0 0 0 0 0 0 world odom"
+          output="screen"/> -->
 </launch>

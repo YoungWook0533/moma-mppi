@@ -8,7 +8,7 @@
     <xacro:arg name="collision_hand" default="true"/>
     <xacro:arg name="collision_finger" default="true"/>
     <xacro:arg name="custom_fingers" default="false"/>
-    <xacro:arg name="no_position_limits" default="true"/>
+    <xacro:arg name="no_position_limits" default="false"/>
     <xacro:arg name="friction" default="0.0"/>
     <xacro:arg name="damping"  default="0.0"/>
 

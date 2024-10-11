@@ -34,12 +34,6 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
 
   nh_.param<bool>("simulation", simulation_, false);
 
-  std::string base_pose_topic;
-  nh_.param<std::string>("base_pose_topic", base_pose_topic, "/base_pose");
-
-  std::string base_twist_topic;
-  nh_.param<std::string>("base_twist_topic", base_twist_topic, "/base_twist");
-
   std::string arm_state_topic;
   nh_.param<std::string>("arm_state_topic", arm_state_topic, "/arm_state");
 
@@ -54,31 +48,29 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   std::string wrench_topic;
   nh_.param<std::string>("wrench_topic", wrench_topic, "/wrench");
 
-  ROS_INFO_STREAM(
-      "Subscribing arm state to: "
-      << arm_state_topic << std::endl
-      << "Subscribing base pose to: " << base_pose_topic << std::endl
-      << "Subscribing base twist to: " << base_twist_topic << std::endl
-      << "Subscribing object pose to: " << object_pose_topic << std::endl
-      << "Subscribing object state to: " << object_state_topic << std::endl
-      << "Subscribing wrench to: " << wrench_topic);
+  std::string odom_topic = "/Odometry"; // Using the /Odometry topic for both pose and twist
 
-  //clang-format off
-  arm_subscriber_ =          nh_.subscribe(arm_state_topic, 1, &StateObserver::arm_state_callback, this);
-  base_pose_subscriber_ =    nh_.subscribe(base_pose_topic, 1, &StateObserver::base_pose_callback, this);
-  base_twist_subscriber_ =   nh_.subscribe(base_twist_topic, 1, &StateObserver::base_twist_callback, this);
-  object_subscriber_ =       nh_.subscribe(object_pose_topic, 1, &StateObserver::object_pose_callback, this);
-  wrench_subscriber_ =       nh_.subscribe(wrench_topic, 1, &StateObserver::wrench_callback, this);
+  ROS_INFO_STREAM(
+      "Subscribing arm state to: " << arm_state_topic << std::endl
+                                   << "Subscribing object pose to: " << object_pose_topic << std::endl
+                                   << "Subscribing object state to: " << object_state_topic << std::endl
+                                   << "Subscribing wrench to: " << wrench_topic << std::endl
+                                   << "Subscribing odometry to: " << odom_topic);
+
+  // Subscribing to topics
+  arm_subscriber_ = nh_.subscribe(arm_state_topic, 1, &StateObserver::arm_state_callback, this);
+  object_subscriber_ = nh_.subscribe(object_pose_topic, 1, &StateObserver::object_pose_callback, this);
+  wrench_subscriber_ = nh_.subscribe(wrench_topic, 1, &StateObserver::wrench_callback, this);
   object_state_subscriber_ = nh_.subscribe(object_state_topic, 1, &StateObserver::object_state_callback, this);
+  odom_subscriber_ = nh_.subscribe(odom_topic, 1, &StateObserver::odom_callback, this); // Subscribe to /Odometry
 
   // ros publishing
-  state_publisher_ =        nh_.advertise<manipulation_msgs::State>("/observer/state", 1);
-  base_pose_publisher_ =    nh_.advertise<geometry_msgs::PoseStamped>("/observer/base_pose", 1);
-  base_twist_publisher_ =   nh_.advertise<geometry_msgs::TwistStamped>("/observer/base_twist", 1);
+  state_publisher_ = nh_.advertise<manipulation_msgs::State>("/observer/state", 1);
+  base_pose_publisher_ = nh_.advertise<geometry_msgs::PoseStamped>("/observer/base_pose", 1);
+  base_twist_publisher_ = nh_.advertise<geometry_msgs::TwistStamped>("/observer/base_twist", 1);
   object_state_publisher_ = nh_.advertise<sensor_msgs::JointState>("/observer/object/joint_state", 1);
-  robot_state_publisher_ =  nh_.advertise<sensor_msgs::JointState>("/observer/base/joint_state", 1);
-  wrench_filt_publisher_ =  nh_.advertise<geometry_msgs::WrenchStamped>("/observer/wrench_filtered_sensor", 1);
-  //clang-format on
+  robot_state_publisher_ = nh_.advertise<sensor_msgs::JointState>("/observer/base/joint_state", 1);
+  wrench_filt_publisher_ = nh_.advertise<geometry_msgs::WrenchStamped>("/observer/wrench_filtered_sensor", 1);
 
   object_state_.name.push_back("articulation_joint");
   object_state_.position.push_back(0.0);
@@ -145,10 +137,10 @@ bool StateObserver::initialize() {
   }
 
   KDL::Chain robot_chain;
-  if (!robot_kinematics.getChain("base_link", "reference_link", robot_chain)) {
-    ROS_ERROR("Failed to extract chain from base_link to reference_link");
-    return false;
-  }
+  // if (!robot_kinematics.getChain("base_link", "reference_link", robot_chain)) {
+  //   ROS_ERROR("Failed to extract chain from base_link to reference_link");
+  //   return false;
+  // }
 
   if (!robot_kinematics.getChain("world", "panda_hand", world_to_ee_chain_)) {
     ROS_ERROR("Failed to extract chain from world to panda_hand");
@@ -199,56 +191,52 @@ bool StateObserver::initialize() {
   return true;
 }
 
-void StateObserver::base_pose_callback(const nav_msgs::OdometryConstPtr& msg) {
-  tf::poseMsgToEigen(msg->pose.pose, T_world_reference_);
-  T_world_base_ = T_world_reference_ * T_reference_base_;
-  // 2d projection of forward motion axis
-  Eigen::Vector3d ix = T_world_base_.rotation().col(0);
+void StateObserver::odom_callback(const nav_msgs::OdometryConstPtr& msg) {
+  // Update base pose using Odometry
+  base_pose_.x() = msg->pose.pose.position.x;
+  base_pose_.y() = msg->pose.pose.position.y;
 
-  {
-    std::unique_lock<std::mutex> lock(state_mutex_);  
-    base_pose_.x() = T_world_base_.translation().x();
-    base_pose_.y() = T_world_base_.translation().y();
-    base_pose_.z() = std::atan2(ix.y(), ix.x());
-    time_ =
-        msg->header.stamp.toSec() >= time_ ? msg->header.stamp.toSec() : time_;
-  }
+  // Extract orientation from quaternion to yaw angle
+  Eigen::Quaterniond q;
+  q.x() = msg->pose.pose.orientation.x;
+  q.y() = msg->pose.pose.orientation.y;
+  q.z() = msg->pose.pose.orientation.z;
+  q.w() = msg->pose.pose.orientation.w;
 
-  // publish to ros
+  // Convert quaternion to yaw (2D) using atan2 to avoid Euler angle issues
+  Eigen::Matrix3d rotation_matrix = q.toRotationMatrix();
+  double siny_cosp = 2.0 * (q.w() * q.z() + q.x() * q.y());
+  double cosy_cosp = 1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z());
+  double yaw = std::atan2(siny_cosp, cosy_cosp);
+  base_pose_.z() = yaw;  // update the yaw angle
+
+  // Update base twist using Odometry
+  base_twist_.x() = msg->twist.twist.linear.x;
+  base_twist_.y() = msg->twist.twist.linear.y;
+  base_twist_.z() = msg->twist.twist.angular.z;
+
+  // Publish updated base pose and twist
   geometry_msgs::PoseStamped base_pose;
   base_pose.header.stamp = ros::Time::now();
   base_pose.header.frame_id = "world";
   base_pose.pose.position.x = base_pose_.x();
   base_pose.pose.position.y = base_pose_.y();
   base_pose.pose.position.z = 0.0;
-  Eigen::Quaterniond q(
-      Eigen::AngleAxisd(base_pose_.z(), Eigen::Vector3d::UnitZ()));
-  base_pose.pose.orientation.x = q.x();
-  base_pose.pose.orientation.y = q.y();
-  base_pose.pose.orientation.z = q.z();
-  base_pose.pose.orientation.w = q.w();
+  Eigen::Quaterniond quat(Eigen::AngleAxisd(base_pose_.z(), Eigen::Vector3d::UnitZ()));
+  base_pose.pose.orientation.x = quat.x();
+  base_pose.pose.orientation.y = quat.y();
+  base_pose.pose.orientation.z = quat.z();
+  base_pose.pose.orientation.w = quat.w();
   base_pose_publisher_.publish(base_pose);
 
+  // Update and publish robot state
   robot_state_.header.stamp = msg->header.stamp;
   robot_state_.position[0] = base_pose_.x();
   robot_state_.position[1] = base_pose_.y();
   robot_state_.position[2] = base_pose_.z();
-
   robot_state_publisher_.publish(robot_state_);
-}
 
-void StateObserver::base_twist_callback(const nav_msgs::OdometryConstPtr& msg) {
-  Eigen::Vector3d odom_base_twist(msg->twist.twist.linear.x,
-                                  msg->twist.twist.linear.y,
-                                  msg->twist.twist.angular.z);
-  odom_base_twist = Eigen::AngleAxis(base_pose_.z(), Eigen::Vector3d::UnitZ()) *
-                    odom_base_twist;
-
-  {
-    std::unique_lock<std::mutex> lock(state_mutex_);  
-    base_twist_ = base_alpha_ * base_twist_ + (1 - base_alpha_) * odom_base_twist;
-  }
-
+  // Update base twist
   base_twist_ros_.header.stamp = msg->header.stamp;
   base_twist_ros_.twist.linear.x = base_twist_.x();
   base_twist_ros_.twist.linear.y = base_twist_.y();
@@ -256,8 +244,7 @@ void StateObserver::base_twist_callback(const nav_msgs::OdometryConstPtr& msg) {
   base_twist_publisher_.publish(base_twist_ros_);
 }
 
-void StateObserver::arm_state_callback(
-    const sensor_msgs::JointStateConstPtr& msg) {
+void StateObserver::arm_state_callback(const sensor_msgs::JointStateConstPtr& msg) {
   if (!are_equal((int)(9), (int)msg->name.size(), (int)msg->position.size(),
                  (int)msg->effort.size(), (int)msg->velocity.size())) {
     ROS_WARN_STREAM_THROTTLE(
@@ -266,7 +253,7 @@ void StateObserver::arm_state_callback(
   }
 
   {
-    std::unique_lock<std::mutex> lock(state_mutex_);  
+    std::unique_lock<std::mutex> lock(state_mutex_);
     for (size_t i = 0; i < 9; i++) {
       q_(i) = msg->position[i];
       dq_(i) = msg->velocity[i];
@@ -434,7 +421,7 @@ void StateObserver::wrench_callback(
   }
 }
 
-void StateObserver::publish_state(){
+void StateObserver::publish_state() {
   std::unique_lock<std::mutex> lock(state_mutex_);
   manipulation::conversions::toMsg(
       ros::Time::now().toSec(), base_pose_, base_twist_, ext_tau_.head<3>(), q_, dq_,
@@ -442,6 +429,5 @@ void StateObserver::publish_state(){
       contact_state_, state_ros_);
 
   state_publisher_.publish(state_ros_);
-
 }
 }  // namespace manipulation_royalpanda

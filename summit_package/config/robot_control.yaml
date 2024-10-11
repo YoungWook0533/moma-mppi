@@ -1,0 +1,246 @@
+joint_pan_position_controller:
+  type: velocity_controllers/JointPositionController
+  joint: summit_xl_front_ptz_camera_pan_joint
+  pid: {p: 100.0, i: 0.01, d: 10.0}
+
+joint_tilt_position_controller:
+  type: velocity_controllers/JointPositionController
+  joint: summit_xl_front_ptz_camera_tilt_joint
+  pid: {p: 100.0, i: 0.01, d: 10.0}
+
+robotnik_base_control:
+  type: diff_drive_controller/DiffDriveController
+  left_wheel: ['summit_xl_front_left_wheel_joint','summit_xl_back_left_wheel_joint']
+  right_wheel: ['summit_xl_front_right_wheel_joint','summit_xl_back_right_wheel_joint']
+  publish_rate: 50.0
+  pose_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 1000.0]
+  twist_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 1000.0]
+
+  # Wheel separation and diameter. These are both optional.
+  # diff_drive_controller will attempt to read either one or both from the
+  # URDF if not specified as a parameter
+  wheel_separation: 0.470 #def 0.433
+  wheel_radius: 0.11 #def 0.0762
+
+  # Wheel separation and radius multipliers
+  wheel_separation_multiplier: 1.0 # default: 1.0
+  wheel_radius_multiplier: 1.0 # default: 1.0
+
+  # Velocity commands timeout [s], default 0.5
+  cmd_vel_timeout: 50
+
+  # Base frame_id
+  base_frame_id: summit_xl_base_footprint
+  odom_frame_id: summit_xl_odom
+  enable_odom_tf: false
+
+  # Velocity and acceleration limits
+  # Whenever a min_* is unspecified, default to -max_*
+  linear:
+    x:
+      has_velocity_limits: true
+      max_velocity: 3.0 #1.5 # m/s
+      min_velocity: -3.0 #-1.5 # m/s
+      has_acceleration_limits: true
+      max_acceleration: 6.0 #3.00  # m/s^2
+      min_acceleration: -6.0 #-3.00 # m/s^2
+  angular:
+    z:
+      has_velocity_limits: true
+      max_velocity: 6.0 #3.0  # rad/s
+      has_acceleration_limits: true
+      max_acceleration: 6.0 #3.0  # rad/s^2
+
+joint_read_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 100.0
+
+manipulation_controller:
+  type: royalpanda/RoyalPandaControllerRos
+  simulation: false
+  fixed_base: $(arg fixed_base)
+
+  arm_id: panda
+  joint_names: [ "panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5", "panda_joint6", "panda_joint7" ]
+  i_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]  # this is actually an integral gain
+  d_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+  arm_I_max: 0.1
+
+  base_K_gains: [10.0, 10.0, 10.0]
+  base_I_gains: [1.0, 1.0, 1.0]
+  I_max: 0.0
+  base_filter_alpha: 0.0
+  
+  publish_rate: 10.0
+  coriolis_factor: 1.0
+
+  state_topic: /observer/state
+  base_twist_topic: /robotnik_base_control/cmd_vel
+
+  policy_update_rate: 0.0  # execute as fast as possible
+  reference_update_rate: 10.0
+  publish_ros: true
+  ros_publish_rate: 10.0
+  static_optimization: false
+
+  # cost stuff
+  linear_weight: 300.0
+  linear_weight_opening: 300.0 # 30 
+
+  angular_weight: 10.0
+  angular_weight_opening: 20.0 # 5
+
+  obstacle_weight: 100
+  obstacle_weight_slope: 10
+  obstacle_radius: 0.8
+
+  contact_weight: 10.0
+
+  max_reach: 1.0
+  reach_weight: 0
+  reach_weight_slope: 0
+
+  object_weight: 50
+  object_tolerance: 0.01
+
+  grasp_translation_offset: [0.0, 0.0, 0.0]
+  grasp_orientation_offset: [0, -0.7071068, 0, 0.7071068]    # -90deg around y
+
+  upper_joint_limits: [2.8973, 1.7628, 2.8973, 0.0698, 2.8973, 3.7525, 2.8973]
+  lower_joint_limits: [-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973]
+  joint_limit_cost: 100 #1000
+  joint_limit_slope: 10 #100
+  object_reference_position: 1.57   
+
+  base_gains:
+    kp: [0.0, 0.0, 0.0]
+    kd: [1000.0, 1000.0, 1000.0]
+
+  arm_gains: 
+    kp: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    kd: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+
+  gripper_gains:
+    kp: [100.0, 100.0]
+    kd: [50.0, 50.0]
+
+manipulation_controller_sim:
+  type: royalpanda/RoyalPandaControllerRos
+  simulation: true
+  fixed_base: $(arg fixed_base)
+  linear_weight: 10.0
+  angular_weight: 1.0
+  obstacle_radius: 0.1
+
+  grasp_translation_offset: [ 0.0, 0.0, 0.0 ]
+  grasp_orientation_offset: [ 0, -0.7071068, 0, 0.7071068]    # -90deg around y
+
+  object_reference_position: 1.50   #  85 deg, slightly less than the limit (90 deg)
+
+  arm_id: panda
+  joint_names: [ "panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5", "panda_joint6", "panda_joint7" ]
+  k_gains: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # this is actually an integral gain
+  d_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+
+  base_K_gains: [10.0, 10.0, 10.0]
+  base_I_gains: [0.01, 0.01, 0.01]
+  I_max: 1.0
+
+  base_filter_alpha: 0.0
+
+  publish_rate: 10.0
+  coriolis_factor: 1.0
+
+  state_topic: /observer/state
+  base_twist_topic: /robotnik_base_control/cmd_vel
+
+  policy_update_rate: 0.0  # execute as fast as possible
+  reference_update_rate: 10.0
+  publish_ros: true
+  ros_publish_rate: 10.0
+  static_optimization: false
+
+panda_position_controller:
+  type: effort_controllers/JointTrajectoryController
+  joints:
+    - panda_joint1
+    - panda_joint2
+    - panda_joint3
+    - panda_joint4
+    - panda_joint5
+    - panda_joint6
+    - panda_joint7
+  constraints:
+    goal_time: 10.0
+  gains:
+    panda_joint1:
+      pid: { p: 12000, d: 50, i: 0.0, i_clamp: 10000 }
+    panda_joint2:
+      pid: { p: 30000, d: 100, i: 0.02, i_clamp: 10000 }
+    panda_joint3:
+      pid: { p: 18000, d: 50, i: 0.01, i_clamp: 1 }
+    panda_joint4:
+      pid: { p: 18000, d: 70, i: 0.01, i_clamp: 10000 }
+    panda_joint5:
+      pid: { p: 12000, d: 70, i: 0.01, i_clamp: 1 }
+    panda_joint6:
+      pid: { p: 7000, d: 50, i: 0.01, i_clamp: 1 }
+    panda_joint7:
+      pid: { p: 2000, d: 20, i: 0.0, i_clamp: 1 }
+      
+joint_pan_position_controller:
+  type: velocity_controllers/JointPositionController
+  joint: summit_xl_front_ptz_camera_pan_joint
+  pid: {p: 100.0, i: 0.01, d: 10.0}
+
+joint_tilt_position_controller:
+  type: velocity_controllers/JointPositionController
+  joint: summit_xl_front_ptz_camera_tilt_joint
+  pid: {p: 100.0, i: 0.01, d: 10.0}
+
+robotnik_base_control:
+  type: diff_drive_controller/DiffDriveController
+  left_wheel: ['summit_xl_front_left_wheel_joint','summit_xl_back_left_wheel_joint']
+  right_wheel: ['summit_xl_front_right_wheel_joint','summit_xl_back_right_wheel_joint']
+  publish_rate: 50.0
+  pose_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 1000.0]
+  twist_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 1000.0]
+
+  # Wheel separation and diameter. These are both optional.
+  # diff_drive_controller will attempt to read either one or both from the
+  # URDF if not specified as a parameter
+  wheel_separation: 0.470 #def 0.433
+  wheel_radius: 0.11 #def 0.0762
+
+  # Wheel separation and radius multipliers
+  wheel_separation_multiplier: 1.0 # default: 1.0
+  wheel_radius_multiplier: 1.0 # default: 1.0
+
+  # Velocity commands timeout [s], default 0.5
+  cmd_vel_timeout: 50
+
+  # Base frame_id
+  base_frame_id: summit_xl_base_footprint
+  odom_frame_id: summit_xl_odom
+  enable_odom_tf: false
+
+  # Velocity and acceleration limits
+  # Whenever a min_* is unspecified, default to -max_*
+  linear:
+    x:
+      has_velocity_limits: true
+      max_velocity: 3.0 #1.5 # m/s
+      min_velocity: -3.0 #-1.5 # m/s
+      has_acceleration_limits: true
+      max_acceleration: 6.0 #3.00  # m/s^2
+      min_acceleration: -6.0 #-3.00 # m/s^2
+  angular:
+    z:
+      has_velocity_limits: true
+      max_velocity: 6.0 #3.0  # rad/s
+      has_acceleration_limits: true
+      max_acceleration: 6.0 #3.0  # rad/s^2
+
+joint_read_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 100.0 

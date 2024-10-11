@@ -54,6 +54,7 @@ class StateObserver {
   void arm_state_callback(const sensor_msgs::JointStateConstPtr& msg);
   void wrench_callback(const geometry_msgs::WrenchStampedConstPtr& msg);
   void object_state_callback(const sensor_msgs::JointStateConstPtr& msg);
+  void odom_callback(const nav_msgs::OdometryConstPtr& msg);
 
   void filter_wrench();
 
@@ -101,6 +102,7 @@ public:
   ros::Subscriber object_subscriber_;
   ros::Subscriber wrench_subscriber_;
   ros::Subscriber object_state_subscriber_;
+  ros::Subscriber odom_subscriber_;
 
   // Articulation
   double start_relative_angle_;

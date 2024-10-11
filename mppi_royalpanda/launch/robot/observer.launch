@@ -53,8 +53,8 @@
     <node pkg="mppi_royalpanda" name="state_observer_node" type="state_observer_node" output="screen">
         <param name="simulation" value="true"/>
         <param name="base_alpha" value="0.7"/>
-        <param name="base_pose_topic" value="/panda_base/vrpn_client/estimated_odometry"/>
-        <param name="base_twist_topic" value="/ridgeback_velocity_controller/odom"/>
+        <param name="base_pose_topic" value="/Odometry"/>
+        <param name="base_twist_topic" value="/robotnik_base_control/odom"/>
         <param name="object_pose_topic" value="/shelf_door/vrpn_client/estimated_odometry"/>
         <param name="arm_state_topic" value="/panda/joint_states"/>
         <param name="object_state_topic" value="/simulation/object_state"/> <!-- only in sim -->

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="mount" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Properties -->
+  <xacro:property name="mass_mount" value="0.877379173528852" />
+  <xacro:property name="ixx_mount" value="0.00358174843161325" />
+  <xacro:property name="ixy_mount" value="1.36945636049963E-18" />
+  <xacro:property name="ixz_mount" value="-2.59431781095676E-18" />
+  <xacro:property name="iyy_mount" value="0.00908997091360066" />
+  <xacro:property name="iyz_mount" value="0.00107704774721428" />
+  <xacro:property name="izz_mount" value="0.00913829134830016" />
+  <xacro:property name="color_rgba_mount" value="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+
+  <!-- Macro for the mount -->
+  <xacro:macro name="mount" params="parent">
+    <link name="mount">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="${mass_mount}" />
+        <inertia ixx="${ixx_mount}" ixy="${ixy_mount}" ixz="${ixz_mount}" iyy="${iyy_mount}" iyz="${iyz_mount}" izz="${izz_mount}" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://summit_package/meshes/mount.STL" />
+        </geometry>
+        <material name="">
+          <color rgba="${color_rgba_mount}" />
+        </material>
+      </visual>
+      <!-- <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://summit_package/meshes/mount.STL" />
+        </geometry>
+      </collision> -->
+    </link>
+    <joint name="mount_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="mount"/>
+      <origin xyz="0.415 0.03 0.39" rpy="0 0 1.57"/>
+    </joint>
+  </xacro:macro>
+
+</robot>

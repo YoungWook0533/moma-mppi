@@ -211,9 +211,9 @@ bool PandaControllerInterface::init_reference_to_current_pose(
   ref_.rr[0].segment<4>(3) = ee_pose.rotation.coeffs();
 
   // init obstacle fare away
-  ref_.rr[0](7) = 100;
-  ref_.rr[0](8) = 100;
-  ref_.rr[0](9) = 100;
+  ref_.rr[0](7) = 3;
+  ref_.rr[0](8) = 3;
+  ref_.rr[0](9) = 3;
 
   // mode
   ref_.rr[0].tail<1>()(0) = 0.0;
@@ -278,7 +278,12 @@ void PandaControllerInterface::update_reference(const mppi::observation_t& x,
 mppi_pinocchio::Pose PandaControllerInterface::get_pose_end_effector(
     const Eigen::VectorXd& x) {
     robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
-  return robot_model_.get_pose("panda_grasp");
+    mppi_pinocchio::Pose ee_pose = robot_model_.get_pose("panda_grasp");
+
+    // Add the wheel radius offset to the z component of the translation vector
+    // ee_pose.translation.z() += 0.05;
+
+    return ee_pose;
 }
 
 mppi_pinocchio::Pose PandaControllerInterface::get_pose_handle(

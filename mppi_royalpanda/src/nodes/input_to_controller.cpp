@@ -1,14 +1,14 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Float64MultiArray.h>
-#include <std_msgs/Float32MultiArray.h>  // Message type of /input topic
+#include <std_msgs/Float32MultiArray.h>
 
 int main(int argc, char** argv) {
     ros::init(argc, argv, "input_to_controllers");
     ros::NodeHandle nh;
 
     // Publishers for the base and arm controllers
-    ros::Publisher base_cmd_pub = nh.advertise<geometry_msgs::Twist>("/ridgeback_velocity_controller/cmd_vel", 1);
+    ros::Publisher base_cmd_pub = nh.advertise<geometry_msgs::Twist>("/robotnik_base_control/cmd_vel", 1);
     ros::Publisher arm_cmd_pub = nh.advertise<std_msgs::Float64MultiArray>("/panda_position_controller/command", 1);
 
     // Subscriber callback for /input topic
@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
         arm_cmd_pub.publish(arm_cmd);  // Publish the joint positions for the arm
     };
 
-    // Subscribe to the /input topic
+    // Subscribe /input
     ros::Subscriber input_sub = nh.subscribe<std_msgs::Float32MultiArray>("/input", 1, input_cb);
 
     ros::spin();  // Keep the node running

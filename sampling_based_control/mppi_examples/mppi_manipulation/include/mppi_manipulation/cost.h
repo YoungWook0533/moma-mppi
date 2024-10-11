@@ -1,22 +1,23 @@
-/*!
- * @file     pendulum_cart_cost.h
- * @author   Giuseppe Rizzi
- * @date     10.06.2020
- * @version  1.0
- * @brief    description
- */
-
 #pragma once
 
 #include <math.h>
 #include <mppi/core/cost.h>
 #include <mppi_pinocchio/model.h>
 #include <ros/ros.h>
+#include <std_msgs/Float32.h>  
+#include <Eigen/Dense>  // Include Eigen for vector calculations
+#include <vector>       // For using std::vector
 
-#include <ros/package.h>
 #include "mppi_manipulation/params/cost_params.h"
 
 namespace manipulation {
+
+// Define a structure for SSV (Sphere Swept Volume)
+struct SSV {
+    Eigen::Vector3d point1;  // Start point of the line segment
+    Eigen::Vector3d point2;  // End point of the line segment
+    double radius;           // Radius of the sphere
+};
 
 class PandaCost : public mppi::Cost {
  public:
@@ -24,7 +25,7 @@ class PandaCost : public mppi::Cost {
   PandaCost(const CostParams& param);
   ~PandaCost() = default;
 
-  // debug only
+  // Debug only
   inline const mppi_pinocchio::RobotModel& robot() const {
     return robot_model_;
   }
@@ -44,6 +45,8 @@ class PandaCost : public mppi::Cost {
   Eigen::Vector3d distance_vector_;
   Eigen::Vector3d collision_vector_;
 
+  ros::NodeHandle nh_;  // Add NodeHandle for subscribing to topics
+
  public:
   mppi::cost_ptr create() override {
     return std::make_shared<PandaCost>(params_);
@@ -62,5 +65,13 @@ class PandaCost : public mppi::Cost {
                             const mppi::input_t& u,
                             const mppi::reference_t& ref,
                             const double t) override;
+
+  // Create SSVs for rollout and calculate minimum distance
+  void createSSVsForRollout(std::vector<SSV>& ssvs, const mppi_pinocchio::RobotModel& robot_model);
+
+  double calculateDistance(const Eigen::Vector3d& P1, const Eigen::Vector3d& P2,const Eigen::Vector3d& Q1, const Eigen::Vector3d& Q2);
+
+  double calculateMinDistance(const std::vector<SSV>& ssvs);
 };
+
 }  // namespace manipulation

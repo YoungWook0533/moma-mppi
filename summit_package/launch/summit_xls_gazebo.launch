@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="prefix" default="summit_xl_"/>
+  <arg name="rviz_config" default="$(find velodyne_description)/rviz/summitxls_a_std.rviz"/>
+  <arg name="robot_model" default="summit_xls_moveit.urdf.xacro" doc="Different robot versions: ('')"/>
+
+  <arg name="omni_drive" default="true"/>
+	<arg if="$(arg omni_drive)" name="ros_planar_move_plugin" value="true"/>
+	<arg unless="$(arg omni_drive)" name="ros_planar_move_plugin" default="true"/>
+	<arg name="ros_planar_move_plugin_force_based" default="false"/>
+
+  <arg name="odom_frame" default="$(arg prefix)odom"/>
+  <arg name="base_frame" default="$(arg prefix)base_footprint"/>
+  <arg name="cmd_vel" default="$(optenv ROBOT_TWISTMUX_CMD_OUT robotnik_base_control/cmd_vel)"/>
+  <arg name="mobile_controller" default="$(optenv ROBOT_CONTROLLER robotnik_base_control)"/>
+  <arg name="odom_broadcast_tf" default="true"/>
+
+  <arg name="paused" default="false" doc="Start Gazebo paused"/>
+  <arg name="world_pose" default="-x 0 -y 0 -z 0 -R 0 -P 0 -Y 0" doc="Pose to spawn the robot at"/>
+  <arg name="initial_joint_positions" default="" doc="Initial joint configuration of the robot"/>
+  <!-- Unpause the simulation after loading the robot model -->
+  <arg name="unpause" value="$(eval '' if arg('paused') else '-unpause')" />
+  <arg name="moveit" value="false" />
+  <arg name="mppi_controller" default="true"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch" >
+    <arg name="world_name" value="$(find summit_package)/world/test_zone.world"/>
+  </include>
+
+  <!-- Load the URDF into ROS parameter server -->
+  <param name="robot_description" textfile="$(find fr3_xls_moveit_config)/config/gazebo_summit_xl.urdf" />
+  <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model robot $(arg unpause) $(arg world_pose) $(arg initial_joint_positions)"
+    respawn="false" output="screen" />
+
+  <!-- Load controller yaml files into ROS parameter server -->
+  <rosparam file="$(find fr3_xls_moveit_config)/config/gazebo_controllers.yaml" />
+  <rosparam file="$(find fr3_xls_moveit_config)/config/ros_controllers.yaml" command="load"/>
+  <rosparam file="$(find fr3_xls_moveit_config)/config/gazebo_controllers.yaml" />
+  
+  <!-- Load controllers -->
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+    output="screen" args="fr3_arm_controller $(arg mobile_controller) joint_read_state_controller"/>
+  
+  <rosparam file="$(find summit_package)/config/robot_control.yaml" command="load" subst_value="true"/>
+
+  <!-- Combine joint values -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+    <param name="publish_frequency" type="double" value="30.0" />
+  </node>
+
+  <!-- Enable MPPI controller -->
+  <group if="$(arg mppi_controller)">
+    <!-- Publishes minimum distance between links to prevent self collision -->
+    <node name="collision_detection_node" pkg="mppi_controller" type="ssv_model"/>
+  </group>
+
+  <group if="$(arg moveit)">
+    <!-- Launch moveit! components -->
+    <include file="$(find fr3_xls_moveit_config)/launch/demo.launch" pass_all_args="true">
+      <arg name="load_robot_description" value="false" />
+      <arg name="moveit_controller_manager" value="ros_control" />
+    </include>
+  </group>
+
+  <!-- Show in Rviz   -->
+  <!--node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_config)"/--> 
+</launch>
+
+
+
+<!-- Sample command for publishing desired joint angles to ros_control -->
+
+<!-- rostopic pub /fr3_arm_controller/command trajectory_msgs/JointTrajectory "{header: {stamp: {secs: 0, nsecs: 0}},joint_names: ['fr3_joint1', 'fr3_joint2', 'fr3_joint3', 'fr3_joint4', 'fr3_joint5', 'fr3_joint6', 'fr3_joint7'],points: [{positions: [0.0, 1.0, 0.0, 0.4, 0.0, 0.17, 0.0],velocities: [0, 0, 0, 0, 0, 0, 0],accelerations: [],effort: [],time_from_start: {secs: 5, nsecs: 0}}]}" -->
+<!-- rostopic pub /fr3_arm_controller/command trajectory_msgs/JointTrajectory "{header: {stamp: {secs: 0, nsecs: 0}},joint_names: ['fr3_joint1', 'fr3_joint2', 'fr3_joint3', 'fr3_joint4', 'fr3_joint5', 'fr3_joint6', 'fr3_joint7'],points: [{positions: [0.0, 1.0, 0.0, -2.0, 0.0, 0.17, 0.0],velocities: [0, 0, 0, 0, 0, 0, 0],accelerations: [],effort: [],time_from_start: {secs: 5, nsecs: 0}}]}" -->
+<!-- rostopic pub /fr3_arm_controller/command trajectory_msgs/JointTrajectory "{header: {stamp: {secs: 0, nsecs: 0}},joint_names: ['fr3_joint1', 'fr3_joint2', 'fr3_joint3', 'fr3_joint4', 'fr3_joint5', 'fr3_joint6', 'fr3_joint7'],points: [{positions: [0.0, -1.0, 0.0, 0.4, 0.0, 0.17, 0.0],velocities: [0, 0, 0, 0, 0, 0, 0],accelerations: [],effort: [],time_from_start: {secs: 5, nsecs: 0}}]}"  -->

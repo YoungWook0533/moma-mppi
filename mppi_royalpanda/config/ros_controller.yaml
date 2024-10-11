@@ -22,7 +22,7 @@ manipulation_controller:
   coriolis_factor: 1.0
 
   state_topic: /observer/state
-  base_twist_topic: /ridgeback_velocity_controller/cmd_vel
+  base_twist_topic: /robotnik_base_control/cmd_vel
 
   policy_update_rate: 0.0  # execute as fast as possible
   reference_update_rate: 10.0
@@ -99,7 +99,7 @@ manipulation_controller_sim:
   coriolis_factor: 1.0
 
   state_topic: /observer/state
-  base_twist_topic: /ridgeback_velocity_controller/cmd_vel
+  base_twist_topic: /robotnik_base_control/cmd_vel
 
   policy_update_rate: 0.0  # execute as fast as possible
   reference_update_rate: 10.0
