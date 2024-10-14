@@ -145,7 +145,7 @@ void createSSVs(std::vector<SSV>& ssvs, const tf2_ros::Buffer& tf_buffer) {
     FG.radius = 0.07;
     ssvs.push_back(FG);
 
-    GH.point1 = Eigen::Vector3d(0, 0.025, 0.02) + getLinkPosition(tf_buffer, "panda_link4");
+    GH.point1 = getLinkPosition(tf_buffer, "panda_link_4_1");
     GH.point2 = Eigen::Vector3d(0, 0.025, 0) + getLinkPosition(tf_buffer, "panda_link5");
     GH.radius = 0.09;
     ssvs.push_back(GH);
@@ -243,6 +243,18 @@ void findClosestSSVs(ros::Publisher& min_distance_pub, const std::vector<SSV>& s
     min_distance_pub.publish(distance_msg);
 }
 
+void deleteSSVMarkers(ros::Publisher& marker_pub, int id_start, int num_markers, const std::string& frame_id) {
+    for (int i = id_start; i < id_start + num_markers; ++i) {
+        visualization_msgs::Marker marker;
+        marker.header.frame_id = frame_id;
+        marker.header.stamp = ros::Time::now();
+        marker.ns = "ssv";
+        marker.id = i;
+        marker.action = visualization_msgs::Marker::DELETE; 
+        marker_pub.publish(marker);
+    }
+}
+
 int main(int argc, char** argv) {
     ros::init(argc, argv, "ssv_collision_checker");
     ros::NodeHandle nh;
@@ -260,13 +272,21 @@ int main(int argc, char** argv) {
     // Create a vector to store the SSVs
     std::vector<SSV> ssvs;
 
+    // Number of markers used to track the IDs for deletion
+    int num_markers = 0;
+
     // Continuously calculate the minimum distances
     ros::Rate rate(30);
     while (ros::ok()) {
         ssvs.clear();
+
+        // Delete previously published markers
+        deleteSSVMarkers(marker_pub, 0, num_markers, "base_link");
+
         createSSVs(ssvs, tf_buffer);
 
         // Print the SSVs and publish the markers
+        num_markers = ssvs.size();  // Update the number of markers
         for (size_t i = 0; i < ssvs.size(); ++i) {
             publishSSVMarker(marker_pub, i, ssvs[i].point1, ssvs[i].point2, ssvs[i].radius, "base_link");
         }

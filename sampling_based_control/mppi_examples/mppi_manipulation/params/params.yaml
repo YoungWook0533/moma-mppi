@@ -95,7 +95,7 @@ cost:
   collision_link_0: panda_link1
   collision_link_1: panda_link7
   collision_threshold: 0.35
-  collision_weight: 10000
+  collision_weight: 1000
 
 # For valve
 # grasp_translation_offset: [0.0, 0.01, 0.07]

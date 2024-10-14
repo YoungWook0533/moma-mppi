@@ -69,7 +69,7 @@ class PandaCost : public mppi::Cost {
   // Create SSVs for rollout and calculate minimum distance
   void createSSVsForRollout(std::vector<SSV>& ssvs, const mppi_pinocchio::RobotModel& robot_model);
 
-  double calculateDistance(const Eigen::Vector3d& P1, const Eigen::Vector3d& P2,const Eigen::Vector3d& Q1, const Eigen::Vector3d& Q2);
+  double calculateDistance(const Eigen::Vector3d& P1, const Eigen::Vector3d& P2, const Eigen::Vector3d& Q1, const Eigen::Vector3d& Q2);
 
   double calculateMinDistance(const std::vector<SSV>& ssvs);
 };

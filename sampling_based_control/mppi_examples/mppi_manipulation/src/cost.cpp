@@ -65,7 +65,7 @@ void PandaCost::createSSVsForRollout(std::vector<SSV>& ssvs, const mppi_pinocchi
     ssvs.push_back(FG);
 
     // Segment GH (Link 4 to Link 5)
-    GH.point1 = Eigen::Vector3d(0, 0.025, 0.02) + robot_model.get_pose("panda_link4").translation;
+    GH.point1 = robot_model.get_pose("panda_link_4_1").translation;
     GH.point2 = Eigen::Vector3d(0, 0.025, 0) + robot_model.get_pose("panda_link5").translation;
     GH.radius = 0.09;
     ssvs.push_back(GH);
@@ -118,8 +118,28 @@ double PandaCost::calculateDistance(const Eigen::Vector3d& P1, const Eigen::Vect
 double PandaCost::calculateMinDistance(const std::vector<SSV>& ssvs) {
     double min_distance = std::numeric_limits<double>::max();
 
+    std::vector<std::pair<int, int>> ignorePairs = {
+        {0, 1},  // AB and CD1
+        {0, 2},  // AB and CD2
+        {1, 2},  // AB and CD2
+        {0, 3},  // AB and EF
+        {3, 4},  // EF and FG
+        {4, 5},  // FG and GH
+        {5, 6}   // GH and I
+    };
+
     for (size_t i = 0; i < ssvs.size(); ++i) {
         for (size_t j = i + 1; j < ssvs.size(); ++j) {
+            bool skip = false;
+            for (const auto& pair : ignorePairs) {
+                if ((i == pair.first && j == pair.second) || (i == pair.second && j == pair.first)) {
+                    skip = true;
+                    break;
+                }
+            }
+            if (skip) continue;
+
+            // Calculate distance and subtract radii
             double distance = calculateDistance(ssvs[i].point1, ssvs[i].point2, ssvs[j].point1, ssvs[j].point2);
             double link_distance = distance - (ssvs[i].radius + ssvs[j].radius);
             if (!std::isnan(link_distance) && link_distance < min_distance) {
@@ -127,9 +147,10 @@ double PandaCost::calculateMinDistance(const std::vector<SSV>& ssvs) {
             }
         }
     }
-
+    // ROS_INFO_STREAM("min_distance = " << min_distance);
     return min_distance;
 }
+
 
 mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
                                      const mppi::input_t& u,
@@ -143,7 +164,6 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
   object_model_.update_state(x.segment<1>(2 * BASE_ARM_GRIPPER_DIM));
   
-
   // regularization cost
   cost += params_.Qreg *
           x.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM).norm();
@@ -198,22 +218,25 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   cost += params_.Q_power * std::max(0.0, (-x.tail<12>().head<10>().transpose() * u.head<10>())(0) - params_.max_power); 
   
   // self collision cost
-  robot_model_.get_offset(params_.collision_link_0, params_.collision_link_1,
-                          collision_vector_);
-  cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - collision_vector_.norm()), 2);
+//   robot_model_.get_offset(params_.collision_link_0, params_.collision_link_1,
+//                           collision_vector_);
+//   cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - collision_vector_.norm()), 2);
   
   // TODO(giuseppe) hard coded for now to match the collision pairs of the safety filter
-  robot_model_.get_offset("panda_link0", "panda_link7", collision_vector_);
-  cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - collision_vector_.norm()), 2);
+//   robot_model_.get_offset("panda_link0", "panda_link7", collision_vector_);
+//   cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - collision_vector_.norm()), 2);
 
-  // SSV-based self-collision cost <ToDo : calculate minimum link distance for simulated joint states, not current joint states>
+  // SSV-based self-collision cost <TODO : calculate minimum link distance for simulated joint states, not current joint states>
   std::vector<SSV> ssvs;
   createSSVsForRollout(ssvs, robot_model_);  // Calculate link positions based on rollout joint states
   double min_distance = calculateMinDistance(ssvs);
 
-  if (min_distance < 0.05) {
-     cost += params_.Q_collision * std::pow(std::max(0.0, 0.05 - min_distance), 2);
+  if(min_distance < 0.05)
+  {
+    cost += 1000000;
   }
+
+  // cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - min_distance), 2);
 
   // arm reach cost
   double reach;
