@@ -51,7 +51,7 @@ gaussian_policy: true
 policy_update_rate: 0.0  # 0.0 execute as fast as possible
 reference_update_rate: 10.0
 publish_ros: true
-ros_publish_rate: 10.0
+ros_publish_rate: 500.0
 
 sequential: false
 

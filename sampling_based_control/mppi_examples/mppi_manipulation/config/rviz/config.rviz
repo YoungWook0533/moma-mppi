@@ -121,6 +121,8 @@ Visualization Manager:
           Value: true
         panda_link8:
           Value: false
+        panda_link_4_1:
+          Value: true
         panda_rightfinger:
           Value: false
         pivot:
@@ -194,6 +196,8 @@ Visualization Manager:
                                     {}
                                   panda_rightfinger:
                                     {}
+                        panda_link_4_1:
+                          {}
             mount:
               {}
             summit_xl_back_left_wheel_link:
@@ -426,6 +430,10 @@ Visualization Manager:
               Show Trail: false
               Value: true
             panda_link8:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            panda_link_4_1:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -670,13 +678,13 @@ Visualization Manager:
       Show Trail: false
       Value: true
     - Class: rviz/Marker
-      Enabled: true
+      Enabled: false
       Marker Topic: /ssv_markers
       Name: Marker
       Namespaces:
-        ssv: true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -733,7 +741,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 7.839925289154053
+      Distance: 5.812718868255615
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -749,9 +757,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5247992277145386
+      Pitch: 0.6097992062568665
       Target Frame: <Fixed Frame>
-      Yaw: 0.2391296625137329
+      Yaw: 1.17913019657135
     Saved: ~
 Window Geometry:
   Displays:

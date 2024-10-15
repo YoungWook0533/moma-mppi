@@ -31,6 +31,7 @@
   <depend>robot_control</depend>
 
   <depend>kdl_parser</depend>
+  <depend>control_toolbox</depend>
 
   <export>
     <controller_interface plugin="${prefix}/plugins.xml"/>
