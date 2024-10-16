@@ -34,7 +34,7 @@ solver:
 
   discount_factor: 1.0
   verbose: false
-  threads: 8
+  threads: 16
   debug_print: false
 
   logging: false

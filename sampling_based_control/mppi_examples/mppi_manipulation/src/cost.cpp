@@ -233,7 +233,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
   if(min_distance < 0.05)
   {
-    cost += 1000000;
+    cost += 1000000 * std::pow(std::max(0.0, params_.collision_threshold - min_distance), 2);
   }
 
   // cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - min_distance), 2);

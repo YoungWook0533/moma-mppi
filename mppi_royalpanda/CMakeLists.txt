@@ -8,6 +8,7 @@ find_package(Eigen3 REQUIRED 3.3)
 find_package(Franka 0.7.0 REQUIRED)
 find_package(orocos_kdl REQUIRED)
 find_package(control_toolbox REQUIRED)
+find_package(pinocchio REQUIRED)
 
 set(PACKAGE_DEPENDENCIES
     sensor_msgs
@@ -35,7 +36,7 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}_controller
   CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
-  DEPENDS Franka orocos_kdl control_toolbox
+  DEPENDS Franka orocos_kdl control_toolbox pinocchio
 )
 
 # Include directories
@@ -62,6 +63,7 @@ add_executable(input_to_controller src/nodes/input_to_controller.cpp)
 target_link_libraries(input_to_controller
     ${catkin_LIBRARIES}
     ${control_toolbox_LIBRARIES}
+    pinocchio::pinocchio
 )
 
 ### Dummy odometry publisher node for testing

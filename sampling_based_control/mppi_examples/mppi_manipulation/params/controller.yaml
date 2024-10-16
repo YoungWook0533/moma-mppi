@@ -2,7 +2,7 @@
 policy_update_rate: 0.0  # execute as fast as possible
 reference_update_rate: 10.0
 publish_ros: true
-ros_publish_rate: 500.0
+ros_publish_rate: 1000.0
 
 gaussian_policy: true
 sequential: false
@@ -40,7 +40,7 @@ solver:
 
   discount_factor: 1.0
   verbose: false
-  threads: 8
+  threads: 16
   debug_print: false
 
   logging: false

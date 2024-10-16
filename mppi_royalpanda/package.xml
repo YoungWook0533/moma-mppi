@@ -32,6 +32,7 @@
 
   <depend>kdl_parser</depend>
   <depend>control_toolbox</depend>
+  <depend>pinocchio</depend>
 
   <export>
     <controller_interface plugin="${prefix}/plugins.xml"/>

@@ -33,7 +33,7 @@ solver:
 
   discount_factor: 1.0            # apply a discount factor on the cost over the horizon
   verbose: true                   # more prints
-  threads: 2                      # number of threads, set to 1 to not use multithreaded sampling
+  threads: 16                      # number of threads, set to 1 to not use multithreaded sampling
   debug_print: true               # debug print
   display_update_freq: true       # displays the frequency of the control loop
 
@@ -48,7 +48,7 @@ obstacle_radius: 0.20
 policy_update_rate: 0.0           # execute as fast as possible, used if sequential=false
 reference_update_rate: 10.0       # update reference at this rate, used if sequential=false
 publish_ros: false                 # optional ros publishing
-ros_publish_rate: 500.0            # ros publishing rate, used if sequential=false
+ros_publish_rate: 1000.0            # ros publishing rate, used if sequential=false
 
 static_optimization: false        # in this setup, no control is sent to the simulation and optimize from same x0
 # set filter type to 0 if true since this is broken with filtering active
