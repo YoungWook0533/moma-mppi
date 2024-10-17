@@ -215,7 +215,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   }
   
   // power cost
-  cost += params_.Q_power * std::max(0.0, (-x.tail<12>().head<10>().transpose() * u.head<10>())(0) - params_.max_power); 
+  // cost += params_.Q_power * std::max(0.0, (-x.tail<12>().head<10>().transpose() * u.head<10>())(0) - params_.max_power); 
   
   // self collision cost
 //   robot_model_.get_offset(params_.collision_link_0, params_.collision_link_1,

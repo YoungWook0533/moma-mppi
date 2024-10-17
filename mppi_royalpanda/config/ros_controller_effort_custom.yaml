@@ -1,6 +1,6 @@
 joint_publisher:
   type: "joint_state_controller/JointStateController"
-  publish_rate: 50
+  publish_rate: 1000
 
 manipulation_controller:
   type: royalpanda/RoyalPandaControllerRos
@@ -18,7 +18,7 @@ manipulation_controller:
   I_max: 0.0
   base_filter_alpha: 0.0
   
-  publish_rate: 10.0
+  publish_rate: 1000.0
   coriolis_factor: 1.0
 
   state_topic: /observer/state
@@ -27,7 +27,7 @@ manipulation_controller:
   policy_update_rate: 0.0  # execute as fast as possible
   reference_update_rate: 10.0
   publish_ros: true
-  ros_publish_rate: 1000.0
+  ros_publish_rate: 500.0
   static_optimization: false
 
   # cost stuff
@@ -95,7 +95,7 @@ manipulation_controller_sim:
 
   base_filter_alpha: 0.0
 
-  publish_rate: 10.0
+  publish_rate: 1000.0
   coriolis_factor: 1.0
 
   state_topic: /observer/state
@@ -104,11 +104,12 @@ manipulation_controller_sim:
   policy_update_rate: 0.0  # execute as fast as possible
   reference_update_rate: 10.0
   publish_ros: true
-  ros_publish_rate: 1000.0
+  ros_publish_rate: 500.0
   static_optimization: false
 
+
 panda_position_controller:
-  type: effort_controllers/JointGroupEffortController
+  type: velocity_controllers/JointGroupVelocityController
   joints:
     - panda_joint1
     - panda_joint2

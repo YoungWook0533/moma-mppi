@@ -4,6 +4,7 @@
     <!--    Arguments-->
     <arg name="fixed_base" default="true"/>
     <arg name="simulation" default="false"/>
+    <arg name="interface" value="effort"/>
 
  	<!-- Config file for controller -->
     <group if="$(arg fixed_base)">
@@ -20,5 +21,5 @@
     </group>
 
      <!--  Controller -->
-    <rosparam file="$(find mppi_royalpanda)/config/ros_controller.yaml" command="load" subst_value="true"/>
+    <rosparam file="$(find mppi_royalpanda)/config/ros_controller_$(arg interface).yaml" command="load" subst_value="true"/>
 </launch>

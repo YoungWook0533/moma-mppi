@@ -28,9 +28,14 @@ set(PACKAGE_DEPENDENCIES
     kdl_parser
     manipulation_msgs
     gazebo_msgs
+    dynamic_reconfigure
 )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
+
+generate_dynamic_reconfigure_options(
+  config/pid.cfg
+)
 
 catkin_package(
   INCLUDE_DIRS include
@@ -59,11 +64,17 @@ add_executable(controller_node src/nodes/controller_node.cpp)
 target_link_libraries(controller_node ${catkin_LIBRARIES})
 
 ### Convert velocity commands to effort
-add_executable(input_to_controller src/nodes/input_to_controller.cpp)
-target_link_libraries(input_to_controller
+add_executable(input_to_controller_effort_custom src/nodes/input_to_controller_effort_custom.cpp)
+target_link_libraries(input_to_controller_effort_custom
     ${catkin_LIBRARIES}
     ${control_toolbox_LIBRARIES}
     pinocchio::pinocchio
+)
+
+add_executable(input_to_controller_effort src/nodes/input_to_controller_effort.cpp)
+target_link_libraries(input_to_controller_effort
+    ${catkin_LIBRARIES}
+    ${control_toolbox_LIBRARIES}
 )
 
 ### Dummy odometry publisher node for testing
