@@ -34,7 +34,8 @@
   <depend>control_toolbox</depend>
   <depend>pinocchio</depend>
   <depend>dynamic_reconfigure</depend>
-
+  <depend>FCL</depend>
+  <depend>moveit_visual_tools</depend>
 
   <export>
     <controller_interface plugin="${prefix}/plugins.xml"/>

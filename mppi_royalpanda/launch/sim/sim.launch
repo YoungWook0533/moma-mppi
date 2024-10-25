@@ -19,7 +19,7 @@
     </include>
 
     <!-- <node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/> -->
-    <node name="collision_detection_node" pkg="mppi_royalpanda" type="ssv_model"/>
+    <node name="collision_detection_node" pkg="mppi_royalpanda" type="ssv_fcl"/>
 </launch>
 
 <!-- rostopic pub /panda_position_controller/command std_msgs/Float64MultiArray "{data: [0.0, 1.0, 0.0, 0.4, 0.0, 0.17, 0.0]}" -->

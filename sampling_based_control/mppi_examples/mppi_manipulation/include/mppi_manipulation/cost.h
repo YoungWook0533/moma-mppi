@@ -7,6 +7,7 @@
 #include <std_msgs/Float32.h>  
 #include <Eigen/Dense>  // Include Eigen for vector calculations
 #include <vector>       // For using std::vector
+#include <fcl/fcl.h>
 
 #include "mppi_manipulation/params/cost_params.h"
 
@@ -69,9 +70,11 @@ class PandaCost : public mppi::Cost {
   // Create SSVs for rollout and calculate minimum distance
   void createSSVsForRollout(std::vector<SSV>& ssvs, const mppi_pinocchio::RobotModel& robot_model);
 
-  double calculateDistance(const Eigen::Vector3d& P1, const Eigen::Vector3d& P2, const Eigen::Vector3d& Q1, const Eigen::Vector3d& Q2);
+  void createFCLObjects(std::vector<std::shared_ptr<fcl::CollisionObjectd>>& fcl_objects, const std::vector<SSV>& ssvs);
 
-  double calculateMinDistance(const std::vector<SSV>& ssvs);
+  double calculateDistance(const std::shared_ptr<fcl::CollisionObjectd>& obj1, const std::shared_ptr<fcl::CollisionObjectd>& obj2);
+
+  double calculateMinDistance(const std::vector<SSV>& ssvs, std::vector<std::shared_ptr<fcl::CollisionObjectd>>& fcl_objects);
 };
 
 }  // namespace manipulation

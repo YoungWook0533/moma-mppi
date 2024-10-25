@@ -9,6 +9,7 @@ option(BUILD_WITH_OGRE "Build the ogre additional utilities and examples." OFF)
 find_package(Eigen3 REQUIRED 3.3)
 find_package(raisim CONFIG REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(FCL REQUIRED)
 
 set(PACKAGE_DEPENDENCIES
         sensor_msgs
@@ -23,6 +24,7 @@ set(PACKAGE_DEPENDENCIES
         manipulation_msgs
         tf2_ros
         signal_logger
+        moveit_visual_tools
         )
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
@@ -30,9 +32,10 @@ catkin_package(
         LIBRARIES ${PROJECT_NAME}
         INCLUDE_DIRS include
         CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
-        DEPENDS raisim)
+        DEPENDS raisim
+        DEPENDS FCL)
 
-include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${FCL_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}
         src/params/gains.cpp
         src/params/dynamics_params.cpp
@@ -42,7 +45,7 @@ add_library(${PROJECT_NAME}
         src/controller_interface.cpp
         src/reference_scheduler.cpp
         src/dynamics_ros.cpp)
-target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES} yaml-cpp)
+target_link_libraries(${PROJECT_NAME} PUBLIC raisim::raisim ${catkin_LIBRARIES} yaml-cpp ${FCL_LIBRARIES})
 
 add_executable(manipulation_control src/nodes/panda_control.cpp)
 target_link_libraries(manipulation_control ${PROJECT_NAME} ${catkin_LIBRARIES} )

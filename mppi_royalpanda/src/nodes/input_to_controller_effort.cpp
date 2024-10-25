@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh;
 
     // Publishers for the base and each joint velocity controllers
-    ros::Publisher base_cmd_pub = nh.advertise<geometry_msgs::Twist>("/robotnik_base_control/cmd_vel", 1);
+    ros::Publisher base_cmd_pub = nh.advertise<geometry_msgs::Twist>("/robotnik_base_control/cmd_vel1", 1);
     ros::Publisher joint1_cmd_pub = nh.advertise<std_msgs::Float64>("/panda_joint1_controller/command", 1);
     ros::Publisher joint2_cmd_pub = nh.advertise<std_msgs::Float64>("/panda_joint2_controller/command", 1);
     ros::Publisher joint3_cmd_pub = nh.advertise<std_msgs::Float64>("/panda_joint3_controller/command", 1);

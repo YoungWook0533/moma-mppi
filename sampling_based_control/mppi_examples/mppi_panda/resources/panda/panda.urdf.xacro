@@ -315,7 +315,7 @@
             </inertial>
         </link>
         <joint name="panda_joint_4_1" type="fixed">
-            <origin rpy="0 0 0" xyz="-0.08 0 0"/>
+            <origin rpy="0 0 0" xyz="-0.0825 0 0"/>
             <parent link="panda_link4"/>
             <child link="panda_link_4_1"/>
             <axis xyz="0 0 1"/>
