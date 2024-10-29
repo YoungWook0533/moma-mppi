@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-    <arg name="interface" value="effort"/>
+    <arg name="interface" value="velocity"/>
     <!-- Load common control configurations -->
     <!-- <rosparam command="load" file="$(find ridgeback_control)/config/control.yaml" /> -->
     <rosparam command="load" file="$(find summit_package)/config/robot_control.yaml" />
@@ -10,8 +10,11 @@
     
 
     <!-- Spawn the controllers -->
-    <node name="controller_spawner" pkg="controller_manager" type="spawner"
-          args="joint_publisher robotnik_base_control panda_joint1_controller panda_joint2_controller panda_joint3_controller panda_joint4_controller panda_joint5_controller panda_joint6_controller panda_joint7_controller"/>
+    <!-- <node name="controller_spawner" pkg="controller_manager" type="spawner"
+          args="joint_publisher robotnik_base_control panda_joint1_controller panda_joint2_controller panda_joint3_controller panda_joint4_controller panda_joint5_controller panda_joint6_controller panda_joint7_controller"/> -->
+      <node name="controller_spawner" pkg="controller_manager" type="spawner"
+          args="joint_publisher robotnik_base_control panda_position_controller"/>
+
 
     <!-- Relay velocity commands -->
     <!-- <node pkg="topic_tools" type="relay" name="cmd_vel_relay"

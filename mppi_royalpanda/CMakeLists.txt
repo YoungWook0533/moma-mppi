@@ -74,8 +74,8 @@ add_executable(controller_node src/nodes/controller_node.cpp)
 target_link_libraries(controller_node ${catkin_LIBRARIES})
 
 ### Convert velocity commands to effort
-add_executable(input_to_controller_effort_custom src/nodes/input_to_controller_effort_custom.cpp)
-target_link_libraries(input_to_controller_effort_custom
+add_executable(input_to_controller_velocity src/nodes/input_to_controller_velocity.cpp)
+target_link_libraries(input_to_controller_velocity
     ${catkin_LIBRARIES}
     ${control_toolbox_LIBRARIES}
     pinocchio::pinocchio

@@ -221,9 +221,9 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
   // SSV-based self-collision cost <TODO : calculate minimum link distance for simulated joint states, not current joint states>
   std::vector<SSV> ssvs;
   std::vector<std::shared_ptr<fcl::CollisionObjectd>> fcl_objects;
-  createSSVsForRollout(ssvs, robot_model_);  // Calculate link positions based on rollout joint states
-  createFCLObjects(fcl_objects, ssvs);
-  double min_distance = calculateMinDistance(ssvs, fcl_objects);
+//   createSSVsForRollout(ssvs, robot_model_);  // Calculate link positions based on rollout joint states
+//   createFCLObjects(fcl_objects, ssvs);
+//   double min_distance = calculateMinDistance(ssvs, fcl_objects);
 
   // if(min_distance < 0.05)
   // {

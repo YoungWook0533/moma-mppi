@@ -4,7 +4,7 @@
     <!--    Arguments-->
     <arg name="fixed_base" default="true"/>
     <arg name="simulation" default="false"/>
-    <arg name="interface" value="effort"/>
+    <arg name="interface" value="velocity"/>
 
  	<!-- Config file for controller -->
     <group if="$(arg fixed_base)">

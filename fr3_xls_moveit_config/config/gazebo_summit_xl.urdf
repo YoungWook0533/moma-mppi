@@ -73,7 +73,7 @@
         </plugin>
     </gazebo>
     <gazebo>
-        <plugin filename="libgazebo_ros_planar_move.so" name="omni_steering">
+        <!-- <plugin filename="libgazebo_ros_planar_move.so" name="omni_steering">
             <commandTopic>robotnik_base_control/cmd_vel</commandTopic>
             <odometryTopic>robotnik_base_control/odom</odometryTopic>
             <odometryFrame>summit_xl_odom</odometryFrame>
@@ -81,6 +81,19 @@
             <robotBaseFrame>summit_xl_base_footprint</robotBaseFrame>
             <publishTF>False</publishTF>
             <enableYAxis>true</enableYAxis>
+        </plugin> -->
+        <plugin filename="libgazebo_ros_force_based_move.so" name="force_based_move">
+            <commandTopic>robotnik_base_control/cmd_vel</commandTopic>
+            <odometryTopic>robotnik_base_control/odom</odometryTopic>
+            <odometryFrame>summit_xl_odom</odometryFrame>
+            <odometryRate>50.0</odometryRate>
+            <robotBaseFrame>base_link</robotBaseFrame>
+            <cmdVelTimeOut>0.25</cmdVelTimeOut>
+            <!-- Don't publish a transform: the controller does it. -->
+            <publishOdometryTf>0</publishOdometryTf>
+            <yaw_velocity_p_gain>500.0</yaw_velocity_p_gain>
+            <x_velocity_p_gain>10000.0</x_velocity_p_gain>
+            <y_velocity_p_gain>10000.0</y_velocity_p_gain>
         </plugin>
     </gazebo>
     <!-- *************** -->
@@ -146,7 +159,8 @@
         <child link="dbb_collision_link" />
     </joint>
     <gazebo reference="dbb_collision_link">
-        <material>Gazebo/Green</material>
+        <material>Gazebo/GreenTransparent</material>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
     </gazebo>
 
     <!-- CHAPAS INOX TAPAS -->

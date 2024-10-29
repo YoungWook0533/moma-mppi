@@ -21,7 +21,7 @@ struct SSV {
     double radius;           // Radius of the sphere
 };
 
-// Fetch a transform from TF2 and convert it to Eigen::Vector3d
+// Get link positions
 Eigen::Vector3d getLinkPosition(const tf2_ros::Buffer& tf_buffer, const std::string& link_name) {
     try {
         geometry_msgs::TransformStamped transformStamped = tf_buffer.lookupTransform("base_link", link_name, ros::Time(0));
@@ -32,7 +32,7 @@ Eigen::Vector3d getLinkPosition(const tf2_ros::Buffer& tf_buffer, const std::str
     }
 }
 
-// Create the SSVs for the robot
+// Create the SSVs
 void createSSVs(std::vector<SSV>& ssvs, const tf2_ros::Buffer& tf_buffer) {
     ssvs.clear();
 
@@ -201,13 +201,13 @@ void findClosestSSVs(ros::Publisher& min_distance_pub, const std::vector<std::sh
     }
 
     if (min_distance <= 0) {
-        ROS_WARN_STREAM("Self-collision detected!");
+        // ROS_WARN_STREAM("Self-collision detected!");
     }
 
     // Publish the minimum distance
     std_msgs::Float32 distance_msg;
     distance_msg.data = min_distance;
-    min_distance_pub.publish(distance_msg);
+    // min_distance_pub.publish(distance_msg);
 }
 
 // Find closest point on EE between base_link
@@ -246,7 +246,7 @@ void publishDistanceToDBB(ros::Publisher& dbb_distance_pub, ros::Publisher& ee_p
 
     std_msgs::Float32 distance_msg;
     distance_msg.data = distance;
-    dbb_distance_pub.publish(distance_msg);
+    // dbb_distance_pub.publish(distance_msg);
 }
 
 
