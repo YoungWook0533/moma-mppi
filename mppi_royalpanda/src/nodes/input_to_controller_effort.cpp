@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh;
 
     // Publishers for the base and each joint velocity controllers
-    ros::Publisher base_cmd_pub = nh.advertise<geometry_msgs::Twist>("/robotnik_base_control/cmd_vel1", 1);
+    ros::Publisher base_cmd_pub = nh.advertise<geometry_msgs::Twist>("/robotnik_base_control/cmd_vel", 1);
     ros::Publisher joint1_cmd_pub = nh.advertise<std_msgs::Float64>("/panda_joint1_controller/command", 1);
     ros::Publisher joint2_cmd_pub = nh.advertise<std_msgs::Float64>("/panda_joint2_controller/command", 1);
     ros::Publisher joint3_cmd_pub = nh.advertise<std_msgs::Float64>("/panda_joint3_controller/command", 1);
@@ -109,9 +109,9 @@ int main(int argc, char** argv) {
 
         // Extract the base twist (first 3 elements for linear.x, linear.y, and angular.z)
         geometry_msgs::Twist base_cmd;
-        base_cmd.linear.x = msg->data[0];
-        base_cmd.linear.y = msg->data[1];
-        base_cmd.angular.z = msg->data[2];
+        base_cmd.linear.x = 1.5*msg->data[0];
+        base_cmd.linear.y = 1.5*msg->data[1];
+        base_cmd.angular.z = 1.5*msg->data[2];
         base_cmd_pub.publish(base_cmd);  // Publish the base twist
 
         // Extract the joint velocities (next 7 elements for the manipulator)

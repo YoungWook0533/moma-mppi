@@ -19,15 +19,14 @@ const double command_timeout = 0.05;   // Timeout for stopping (in seconds)
 std::vector<std::tuple<Eigen::Vector3f, double>> dbb_points;
 Eigen::Vector3f last_acting_point;  // Store the previous acting point for smooth transition
 bool first_search = true;  // Flag to check if it's the first acting point selection
-float max_transition_distance = 0.03;  // Define a bound for the maximum allowed transition
+float max_transition_distance = 0.1;  // Define a bound for the maximum allowed transition
 
-ros::Publisher velocity_pub;
+// ros::Publisher velocity_pub;
 ros::Publisher marker_pub;
 ros::Publisher pointcloud_pub;
 ros::Publisher acting_point_pub;
 ros::Timer stop_timer;
 
-// Function to load and sort DBB points by z and score
 std::vector<std::tuple<Eigen::Vector3f, double>> loadAndSortDBBPoints(const std::string& filename) {
     std::vector<std::tuple<Eigen::Vector3f, double>> points;
     std::ifstream infile(filename);
@@ -46,23 +45,37 @@ std::vector<std::tuple<Eigen::Vector3f, double>> loadAndSortDBBPoints(const std:
     infile.close();
     ROS_INFO("Successfully loaded %d points from DBB file.", point_count);
 
+    // First, sort by z, then x, then y, in ascending order
     std::sort(points.begin(), points.end(), [](const auto& p1, const auto& p2) {
-        return std::get<0>(p1).z() < std::get<0>(p2).z();
+        const auto& p1_pos = std::get<0>(p1);
+        const auto& p2_pos = std::get<0>(p2);
+        if (p1_pos.z() != p2_pos.z()) return p1_pos.z() < p2_pos.z();
+        if (p1_pos.x() != p2_pos.x()) return p1_pos.x() < p2_pos.x();
+        return p1_pos.y() < p2_pos.y();
     });
 
+    // Then, sort by score within each (z, x, y) group in descending order
     auto it = points.begin();
     while (it != points.end()) {
         auto range_end = std::upper_bound(it, points.end(), *it, [](const auto& p1, const auto& p2) {
-            return std::get<0>(p1).z() < std::get<0>(p2).z();
+            const auto& p1_pos = std::get<0>(p1);
+            const auto& p2_pos = std::get<0>(p2);
+            return p1_pos.z() < p2_pos.z() ||
+                   (p1_pos.z() == p2_pos.z() && p1_pos.x() < p2_pos.x()) ||
+                   (p1_pos.z() == p2_pos.z() && p1_pos.x() == p2_pos.x() && p1_pos.y() < p2_pos.y());
         });
+        
+        // Sort within the group by score
         std::sort(it, range_end, [](const auto& p1, const auto& p2) {
             return std::get<1>(p1) > std::get<1>(p2);
         });
+
         it = range_end;
     }
 
     return points;
 }
+
 
 // Function to publish DBB points as PointCloud2 with intensity
 void publishDBBPointCloud() {
@@ -101,11 +114,11 @@ void publishDBBPointCloud() {
     pointcloud_pub.publish(pointcloud_msg);
 }
 
-// Modified function to find the next acting point within a bounded region
 Eigen::Vector3f findActingPoint(const std::vector<std::tuple<Eigen::Vector3f, double>>& dbb_points, const Eigen::Vector3f& ee_position) {
     Eigen::Vector3f closest_point;
     double min_distance = std::numeric_limits<double>::max();
 
+    // Step 1: Find the closest point to the EE position
     for (const auto& point : dbb_points) {
         const Eigen::Vector3f& p = std::get<0>(point);
         double distance_to_ee = (p - ee_position).norm();
@@ -116,18 +129,31 @@ Eigen::Vector3f findActingPoint(const std::vector<std::tuple<Eigen::Vector3f, do
         }
     }
 
-    double max_score = -std::numeric_limits<double>::max();
-    Eigen::Vector3f acting_point = closest_point;
-
+    // Step 2: Define x and y bounds based on the score-dependent alpha values
+    std::vector<std::tuple<Eigen::Vector3f, double>> candidates;
     for (const auto& point : dbb_points) {
         const Eigen::Vector3f& p = std::get<0>(point);
         double score = std::get<1>(point);
 
-        double distance_to_closest = (p - closest_point).norm();
-        double alpha_i = min_distance / std::abs(score / 300);
+        double alpha_x = min_distance / std::abs(score / 100.0);
+        double alpha_y = min_distance / std::abs(score / 100.0);
 
-        // Check if the point is within alpha_i and also close enough to the last acting point
-        if (distance_to_closest <= alpha_i && score > max_score) {
+        // Only add points within the x and y bounds relative to closest_point to candidates
+        if (std::abs(p.x() - closest_point.x()) <= alpha_x && std::abs(p.y() - closest_point.y()) <= alpha_y) {
+            candidates.push_back(point);
+        }
+    }
+
+    // Step 3: From the candidates, find the point with the highest score
+    double max_score = -std::numeric_limits<double>::max();
+    Eigen::Vector3f acting_point = closest_point;
+
+    for (const auto& candidate : candidates) {
+        const Eigen::Vector3f& p = std::get<0>(candidate);
+        double score = std::get<1>(candidate);
+
+        // Update acting_point if the candidate has a higher score
+        if (score > max_score) {
             if (first_search || (p - last_acting_point).norm() <= max_transition_distance) {
                 max_score = score;
                 acting_point = p;
@@ -136,9 +162,12 @@ Eigen::Vector3f findActingPoint(const std::vector<std::tuple<Eigen::Vector3f, do
     }
 
     last_acting_point = acting_point;  // Update last acting point
-    first_search = false;  // Update flag after first search
+    first_search = false;              // Update flag after first search
     return acting_point;
 }
+
+
+
 
 // Publish a marker at the acting point and the acting point coordinates
 void publishActingPoint(const Eigen::Vector3f& acting_point) {
@@ -198,8 +227,10 @@ void actingPointCallback(const geometry_msgs::Point::ConstPtr& msg) {
     // Set angular velocity
     cmd_vel.angular.z = scaling * target_angle;
 
+    ROS_WARN("Target vel : %f, %f", -scaling * distance_to_origin, scaling * target_angle);
+
     // Publish the velocity command
-    velocity_pub.publish(cmd_vel);
+    // velocity_pub.publish(cmd_vel);
 
     // Reset the stop timer to avoid stopping if valid commands are received
     stop_timer.stop();
@@ -211,7 +242,7 @@ void stopRobot(const ros::TimerEvent&) {
     geometry_msgs::Twist stop_cmd;
     stop_cmd.linear.x = 0.0;
     stop_cmd.angular.z = 0.0;
-    velocity_pub.publish(stop_cmd);
+    // velocity_pub.publish(stop_cmd);
 }
 
 int main(int argc, char** argv) {
@@ -231,7 +262,7 @@ int main(int argc, char** argv) {
     marker_pub = nh.advertise<visualization_msgs::Marker>("acting_point_marker", 10);
     pointcloud_pub = nh.advertise<sensor_msgs::PointCloud2>("dbb_pointcloud", 10);
     acting_point_pub = nh.advertise<geometry_msgs::Point>("acting_point", 10);
-    velocity_pub = nh.advertise<geometry_msgs::Twist>("/robotnik_base_control/cmd_vel", 10);
+    // velocity_pub = nh.advertise<geometry_msgs::Twist>("/robotnik_base_control/cmd_vel1", 10);
 
     // Subscriber to /ee_point topic
     ros::Subscriber ee_points_sub = nh.subscribe<geometry_msgs::Point>("/ee_point", 10, eePointsCallback);

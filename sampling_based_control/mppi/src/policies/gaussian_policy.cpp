@@ -81,6 +81,7 @@ Eigen::VectorXd GaussianPolicy::nominal(double t) {
       1;
 
   double alpha = (t - t_(time_idx)) / (t_(time_idx + 1) - t_(time_idx));
+  // std::cout << "alpha: " << alpha << std::endl;
   return (1 - alpha) * nominal_.row(time_idx) +
          alpha * nominal_.row(time_idx + 1);
 }

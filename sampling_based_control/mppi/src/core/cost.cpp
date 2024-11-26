@@ -31,7 +31,7 @@ void Cost::interpolate_reference(const observation_t & /*x*/, reference_t &ref,
 }
 
 double Cost::get_stage_cost(const mppi::observation_t &x,
-                            const mppi::input_t &u, const double t) {
+                            mppi::input_t &u, const double t) {
   interpolate_reference(x, r_, t);
   return compute_cost(x, u, r_, t);
 }

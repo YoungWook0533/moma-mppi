@@ -111,6 +111,7 @@ void Solver::update_policy() {
       stage_cost_ =
           cost_->get_stage_cost(x0_internal_, opt_roll_.uu[0], t0_internal_);
     }
+    // ROS_WARN("cost : %f", stage_cost_);
     swap_policies();
     auto end = std::chrono::steady_clock::now();
     rate_ = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() / 1e9;
@@ -312,7 +313,13 @@ void Solver::optimize() {
   for (int t = 0; t < steps_; t++) {
     opt_roll_.tt[t] = t0_internal_ + t * config_.step_size;
     opt_roll_.uu[t] = policy_->nominal(t0_internal_ + t * config_.step_size);
+    // ROS_INFO_STREAM("t0_internal_: " << t0_internal_);
   }
+
+  // for (int t = 0; t < steps_; ++t) {
+  //   ROS_INFO_STREAM("Nominal control input at step " << t << ": " << opt_roll_.uu[t].transpose());
+  // }
+
 
 }
 

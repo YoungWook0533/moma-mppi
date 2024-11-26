@@ -12,18 +12,56 @@
 #include <std_msgs/Float32.h>
 #include <limits>
 #include <fcl/fcl.h>
-
+#include <geometry_msgs/Point.h>
+#include <ros/ros.h>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <moveit_visual_tools/moveit_visual_tools.h>
+#include <geometry_msgs/Twist.h>
+#include <math.h>
+#include <visualization_msgs/Marker.h>
 
 using namespace manipulation;
 
-PandaCost::PandaCost(const CostParams& params) : params_(params) {
+// Static variable to store DBB points loaded from the file
+static std::vector<std::tuple<Eigen::Vector3f, double>> static_dbb_points;
+bool first_search = true;
+Eigen::Vector3f last_acting_point;
+double distance_;
+
+PandaCost::PandaCost(const CostParams& params) : params_(params), calculated_velocity_(), dbb_distance_(std::numeric_limits<float>::max()), acting_point_(Eigen::Vector3f::Zero()) {
   robot_model_.init_from_xml(params_.robot_description);
   object_model_.init_from_xml(params_.object_description);
+
+//   static bool dbb_loaded = false;
+
+//   if (!dbb_loaded) {
+//       // Load and sort DBB points from .txt file
+//       std::string package_path = ros::package::getPath("mppi_royalpanda");
+//       std::string txt_file_path = package_path + "/mesh/DBB.txt";
+//       static_dbb_points = loadAndSortDBBPoints(txt_file_path);
+//       if (static_dbb_points.empty()) {
+//           ROS_ERROR("Failed to load DBB points from .txt file");
+//       }
+//       dbb_loaded = true;
+//   }
+
+//   dbb_points_ = static_dbb_points;
+  dbb_distance_sub_ = nh_.subscribe("/dbb_distance", 10, &PandaCost::dbbDistanceCallback, this);
+  acting_point_sub_ = nh_.subscribe("/acting_point", 10, &PandaCost::actingPointCallback, this);
+}
+
+void PandaCost::dbbDistanceCallback(const std_msgs::Float32::ConstPtr& msg) {
+  dbb_distance_ = msg->data;
+}
+void PandaCost::actingPointCallback(const geometry_msgs::Point::ConstPtr& msg) {
+    acting_point_ = Eigen::Vector3f(msg->x, msg->y, msg->z);  // Update acting_point_ with received data
 }
 
 void PandaCost::createSSVsForRollout(std::vector<SSV>& ssvs, const mppi_pinocchio::RobotModel& robot_model) {
-    // Base link SSVs
-    SSV AB, CD1, CD2;
+    // Base link SSV
+    SSV AB, CD;
 
     // Get the base link's position from the rollout state
     Eigen::Vector3d base_pos = robot_model.get_pose("base_link").translation;
@@ -33,38 +71,14 @@ void PandaCost::createSSVsForRollout(std::vector<SSV>& ssvs, const mppi_pinocchi
     AB.radius = 0.3;
     ssvs.push_back(AB);
 
-    CD1.point1 = base_pos + Eigen::Vector3d(-0.2256, 0.07, 0.481);
-    CD1.point2 = base_pos + Eigen::Vector3d(-0.2256, 0.07, 1.3);
-    CD1.radius = 0.09;
-    ssvs.push_back(CD1);
+    // Use capsule collision model for DBB_mesh
+    CD.point1 = base_pos + Eigen::Vector3d(0.2776, 0, 0.2405);
+    CD.point2 = base_pos + Eigen::Vector3d(-0.2776, 0, 0.2405);
+    CD.radius = 0.45;
+    ssvs.push_back(CD);
 
-    CD2.point1 = base_pos + Eigen::Vector3d(-0.2256, -0.07, 0.481);
-    CD2.point2 = base_pos + Eigen::Vector3d(-0.2256, -0.07, 1.3);
-    CD2.radius = 0.09;
-    ssvs.push_back(CD2);
-
-    // Manipulator SSVs
-    SSV EF, FG, GH, I;
-
-    // Use the robot model to get the positions of the manipulator links based on rollout joint states
-    Eigen::Vector3d panda_link0 = robot_model.get_pose("panda_link0").translation;
-    Eigen::Vector3d panda_link2 = robot_model.get_pose("panda_link2").translation;
-
-    EF.point1 = panda_link0;
-    EF.point2 = panda_link2;
-    EF.radius = 0.07;
-    ssvs.push_back(EF);
-
-    FG.point1 = panda_link2;
-    FG.point2 = robot_model.get_pose("panda_link3").translation;
-    FG.radius = 0.07;
-    ssvs.push_back(FG);
-
-    GH.point1 = robot_model.get_pose("panda_link_4_1").translation;
-    GH.point2 = Eigen::Vector3d(0, 0.025, 0) + robot_model.get_pose("panda_link5").translation;
-    GH.radius = 0.09;
-    ssvs.push_back(GH);
-
+    // End effector SSV
+    SSV I;
     I.point1 = robot_model.get_pose("panda_link7").translation;
     I.point2 = robot_model.get_pose("panda_link8").translation;
     I.radius = 0.1;
@@ -97,464 +111,246 @@ void PandaCost::createFCLObjects(std::vector<std::shared_ptr<fcl::CollisionObjec
     }
 }
 
-// Calculate the distance between two FCL objects
-double PandaCost::calculateDistance(const std::shared_ptr<fcl::CollisionObjectd>& obj1, const std::shared_ptr<fcl::CollisionObjectd>& obj2) {
+// Find closest point on EE between DBB
+double PandaCost::EEToDBB(const std::vector<std::shared_ptr<fcl::CollisionObjectd>>& fcl_objects) {
     fcl::DistanceRequestd request;
     fcl::DistanceResultd result;
-
-    // Perform distance calculation
-    double distance = fcl::distance(obj1.get(), obj2.get(), request, result);
+    request.enable_nearest_points = true;
+    
+    double distance = fcl::distance(fcl_objects[1].get(), fcl_objects[2].get(), request, result);
 
     return distance;
 }
 
+// Find closest point on EE between base_link
+Eigen::Vector3f PandaCost::EEToBase(const std::vector<std::shared_ptr<fcl::CollisionObjectd>>& fcl_objects) {
+    fcl::DistanceRequestd request;
+    fcl::DistanceResultd result;
+    request.enable_nearest_points = true;
+    
+    distance_ = fcl::distance(fcl_objects[0].get(), fcl_objects[2].get(), request, result);
 
-double PandaCost::calculateMinDistance(const std::vector<SSV>& ssvs, std::vector<std::shared_ptr<fcl::CollisionObjectd>>& fcl_objects) {
+    Eigen::Vector3f ee_point;
+    ee_point.x() = result.nearest_points[1][0];
+    ee_point.y() = result.nearest_points[1][1];
+    ee_point.z() = result.nearest_points[1][2];
+
+    return ee_point;
+}
+
+std::vector<std::tuple<Eigen::Vector3f, double>> PandaCost::loadAndSortDBBPoints(const std::string& filename) {
+    std::vector<std::tuple<Eigen::Vector3f, double>> points;
+    std::ifstream infile(filename);
+    float x, y, z, score;
+
+    if (!infile.is_open()) {
+        ROS_ERROR("Failed to open DBB file: %s", filename.c_str());
+        return points;
+    }
+
+    int point_count = 0;
+    while (infile >> x >> y >> z >> score) {
+        points.emplace_back(Eigen::Vector3f(x, y, z), score);
+        ++point_count;
+    }
+    infile.close();
+    ROS_INFO("Successfully loaded %d points from DBB file.", point_count);
+
+    // First, sort by z, then x, then y, in ascending order
+    std::sort(points.begin(), points.end(), [](const auto& p1, const auto& p2) {
+        const auto& p1_pos = std::get<0>(p1);
+        const auto& p2_pos = std::get<0>(p2);
+        if (p1_pos.z() != p2_pos.z()) return p1_pos.z() < p2_pos.z();
+        if (p1_pos.x() != p2_pos.x()) return p1_pos.x() < p2_pos.x();
+        return p1_pos.y() < p2_pos.y();
+    });
+
+    // Then, sort by score within each (z, x, y) group in descending order
+    auto it = points.begin();
+    while (it != points.end()) {
+        auto range_end = std::upper_bound(it, points.end(), *it, [](const auto& p1, const auto& p2) {
+            const auto& p1_pos = std::get<0>(p1);
+            const auto& p2_pos = std::get<0>(p2);
+            return p1_pos.z() < p2_pos.z() ||
+                   (p1_pos.z() == p2_pos.z() && p1_pos.x() < p2_pos.x()) ||
+                   (p1_pos.z() == p2_pos.z() && p1_pos.x() == p2_pos.x() && p1_pos.y() < p2_pos.y());
+        });
+        
+        // Sort within the group by score
+        std::sort(it, range_end, [](const auto& p1, const auto& p2) {
+            return std::get<1>(p1) > std::get<1>(p2);
+        });
+
+        it = range_end;
+    }
+
+    return points;
+}
+
+Eigen::Vector3f PandaCost::findActingPoint(const std::vector<std::tuple<Eigen::Vector3f, double>>& dbb_points, const Eigen::Vector3f& ee_position) {
+    Eigen::Vector3f closest_point;
     double min_distance = std::numeric_limits<double>::max();
 
-    std::vector<std::pair<int, int>> ignorePairs = {
-        {0, 1},  // AB and CD1
-        {0, 2},  // AB and CD2
-        {1, 2},  // AB and CD2
-        {0, 3},  // AB and EF
-        {3, 4},  // EF and FG
-        {4, 5},  // FG and GH
-        {5, 6}   // GH and I
-    };
+    // Find the closest point to the clamped EE position
+    for (const auto& point : dbb_points) {
+        const Eigen::Vector3f& p = std::get<0>(point);
+        double distance_to_ee = (p - ee_position).norm();
 
-    for (size_t i = 0; i < fcl_objects.size(); ++i) {
-        for (size_t j = i + 1; j < fcl_objects.size(); ++j) {
-            bool skip = false;
-            for (const auto& pair : ignorePairs) {
-                if ((i == pair.first && j == pair.second) || (i == pair.second && j == pair.first)) {
-                    skip = true;
-                    break;
-                }
-            }
-            if (skip) continue;
-
-            // Calculate the distance
-            double distance = calculateDistance(fcl_objects[i], fcl_objects[j]);
-            if (distance < min_distance) {
-                min_distance = distance;
-            }
+        if (distance_to_ee < min_distance) {
+            min_distance = distance_to_ee;
+            closest_point = p;
         }
     }
-    return min_distance;
+
+    // Define x and y bounds based on the score-dependent alpha values
+    std::vector<std::tuple<Eigen::Vector3f, double>> candidates;
+    for (const auto& point : dbb_points) {
+        const Eigen::Vector3f& p = std::get<0>(point);
+        double score = std::get<1>(point);
+
+        double alpha_x = min_distance / std::abs(score / 300.0);
+        double alpha_y = min_distance / std::abs(score / 300.0);
+
+        // Only add points within the x and y bounds relative to closest_point to candidates
+        if (std::abs(p.x() - closest_point.x()) <= alpha_x && std::abs(p.y() - closest_point.y()) <= alpha_y) {
+            candidates.push_back(point);
+        }
+    }
+
+    // From the candidates, find the point with the highest score
+    double max_score = -std::numeric_limits<double>::max();
+    Eigen::Vector3f acting_point = closest_point;
+
+    for (const auto& candidate : candidates) {
+        const Eigen::Vector3f& p = std::get<0>(candidate);
+        double score = std::get<1>(candidate);
+
+        if (first_search) {
+            max_score = score;
+            acting_point = p;
+        }
+        // Update acting_point if the candidate has a higher score
+        if (score > max_score) {
+            max_score = score;
+            acting_point = p;
+        }
+    }
+
+    // ROS_INFO("Acting Point on DBB: [%f, %f, %f]", acting_point.x(), acting_point.y(), acting_point.z());
+    last_acting_point = acting_point;  // Update last acting point
+    first_search = false;              // Update flag after first search
+    return acting_point;
 }
 
 
 mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
-                                     const mppi::input_t& u,
+                                     mppi::input_t& u,
                                      const mppi::reference_t& ref,
                                      const double t) {
-  double cost = 0.0;
-  
-  // int mode = ref(PandaDim::REFERENCE_DIMENSION - 1);
-  int mode = 0;
+    double cost = 0;
+    int mode = 0;
+    double reach;
+    double base_regularization_weight = 0.5;  // Lower weight to encourage base movement
+    double arm_regularization_weight = 1.0;   // Higher weight to discourage arm movement
 
-  robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
-  object_model_.update_state(x.segment<1>(2 * BASE_ARM_GRIPPER_DIM));
-  
-  // regularization cost
-  cost += params_.Qreg *
-          x.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM).norm();
-  
-  // end effector reaching cost
-  if (mode == 0) {
+    robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
+    object_model_.update_state(x.segment<1>(2 * BASE_ARM_GRIPPER_DIM));
+
+    // Self-collision avoidance using acting point
+    std::vector<SSV> ssvs;
+    std::vector<std::shared_ptr<fcl::CollisionObjectd>> fcl_objects;
+    createSSVsForRollout(ssvs, robot_model_);
+    createFCLObjects(fcl_objects, ssvs);
+    double distance = EEToDBB(fcl_objects);
+
     Eigen::Vector3d ref_t = ref.head<3>();
     Eigen::Quaterniond ref_q(ref.segment<4>(3));
     robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
-    cost +=
-        (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
-    cost +=
-        (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
 
-    if (x(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION) > 0) cost += params_.Qc;
-  }
+    if (dbb_distance_ > 0) {
+        
+        // End-effector reaching cost
+        cost += (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
+        cost += (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
 
-  // handle reaching cost
-  else if (mode == 1) {
-    error_ = mppi_pinocchio::diff(
-        robot_model_.get_pose(params_.tracked_frame),
-        object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
-    cost +=
-        (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
-    cost +=
-        (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
+        // Joint limits cost
+        for (size_t i = 0; i < 10; i++) {
+            if (x(i) < params_.lower_joint_limits[i])
+                cost += params_.Q_joint_limit + params_.Q_joint_limit_slope * std::pow(params_.lower_joint_limits[i] - x(i), 2);
 
-    // contact cost
-    if (x(2*BASE_ARM_GRIPPER_DIM + 2*OBJECT_DIMENSION) > 0) {
-      cost += params_.Qc;
+            if (x(i) > params_.upper_joint_limits[i])
+                cost += params_.Q_joint_limit + params_.Q_joint_limit_slope * std::pow(x(i) - params_.upper_joint_limits[i], 2);
+        }
+
+        // Arm reach cost
+        robot_model_.get_offset(params_.arm_base_frame, params_.tracked_frame,
+                                distance_vector_);
+        reach = distance_vector_.head<2>().norm();
+        if (reach > params_.max_reach) {
+            cost += params_.Q_reach +
+                    params_.Q_reachs * (std::pow(reach - params_.max_reach, 2));
+        }
+
+        if (distance_vector_.norm() < params_.min_dist) {
+            cost += params_.Q_reach +
+                    params_.Q_reachs * (std::pow(reach - params_.min_dist, 2));
+        }
     }
-  }
+    // ROS_WARN("base : %f, %f", u(0), u(2));
 
-  // object displacement cost
-  else if (mode == 2) {
-    error_ = mppi_pinocchio::diff(
-        robot_model_.get_pose(params_.tracked_frame),
-        object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
-    cost +=
-        (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt2;
-    cost +=
-        (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr2;
+    // End-effector inside DBB
+    if (dbb_distance_ <= 0) { 
 
-    double object_error =
-        x(2 * BASE_ARM_GRIPPER_DIM) -
-        ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE);
+        // Apply regularization with different weights for the base and arm segments
+        // cost += base_regularization_weight * x.segment<3>(0).norm() + 
+        //         arm_regularization_weight * x.segment<7>(3).norm();
 
-    cost += object_error * object_error * params_.Q_obj;
-  }
-  
-  // power cost
-  // cost += params_.Q_power * std::max(0.0, (-x.tail<12>().head<10>().transpose() * u.head<10>())(0) - params_.max_power); 
-  
-  // self collision cost
-//   robot_model_.get_offset(params_.collision_link_0, params_.collision_link_1,
-//                           collision_vector_);
-//   cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - collision_vector_.norm()), 2);
-  
-  // TODO(giuseppe) hard coded for now to match the collision pairs of the safety filter
-//   robot_model_.get_offset("panda_link0", "panda_link7", collision_vector_);
-//   cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - collision_vector_.norm()), 2);
+        cost += (error_.head<3>().transpose() * error_.head<3>()).norm() * 300 * params_.Qt;
+        cost += (error_.tail<3>().transpose() * error_.tail<3>()).norm() * 300 * params_.Qr;
 
-  // SSV-based self-collision cost <TODO : calculate minimum link distance for simulated joint states, not current joint states>
-  std::vector<SSV> ssvs;
-  std::vector<std::shared_ptr<fcl::CollisionObjectd>> fcl_objects;
-//   createSSVsForRollout(ssvs, robot_model_);  // Calculate link positions based on rollout joint states
-//   createFCLObjects(fcl_objects, ssvs);
-//   double min_distance = calculateMinDistance(ssvs, fcl_objects);
+        // Find acting point among DBB
+        // Eigen::Vector3f ee_point = EEToBase(fcl_objects);
+        // Eigen::Vector3f acting_point = findActingPoint(dbb_points_, ee_point);
 
-  // if(min_distance < 0.05)
-  // {
-  //   cost += 1000000 * std::pow(std::max(0.0, params_.collision_threshold - min_distance), 2);
-  // }
+        if (acting_point_ != Eigen::Vector3f::Zero()) {
+            double x = acting_point_.x();
+            double y = acting_point_.y();
+            
+            // Calculate the desired velocity from the acting point
+            double distance_to_origin = std::sqrt(x * x + y * y);
+            double target_angle = std::atan2(y, x);
 
-  // cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - min_distance), 2);
+            // ROS_INFO("Distance to Origin: %f", distance_to_origin);
+            // ROS_INFO("Target Angle: %f", target_angle);
+            
+            Eigen::Vector2d acting_point_velocity = Eigen::Vector2d::Zero();
+            acting_point_velocity.x() = -distance_to_origin;  // Linear velocity
+            acting_point_velocity.y() = target_angle;         // Angular velocity
 
-  // arm reach cost
-  double reach;
-  robot_model_.get_offset(params_.arm_base_frame, params_.tracked_frame,
-                          distance_vector_);
-  reach = distance_vector_.head<2>().norm();
-  if (reach > params_.max_reach) {
-    cost += params_.Q_reach +
-            params_.Q_reachs * (std::pow(reach - params_.max_reach, 2));
-  }
+            // Extract base control input
+            Eigen::Vector2d base_speed = Eigen::Vector2d::Zero();
+            base_speed.x() = u(0);
+            base_speed.y() = u(2);
 
-  if (distance_vector_.norm() < params_.min_dist) {
-    cost += params_.Q_reach +
-            params_.Q_reachs * (std::pow(reach - params_.min_dist, 2));
-  }
-  
-  // joint limits cost
-  for (size_t i = 0; i < 10; i++) {
-    if (x(i) < params_.lower_joint_limits[i])
-      cost += params_.Q_joint_limit +
-              params_.Q_joint_limit_slope *
-                  std::pow(params_.lower_joint_limits[i] - x(i), 2);
+            u(0) = acting_point_velocity.x();
+            u(2) = acting_point_velocity.y();
+            
+            // ROS_WARN("Target vel : %f, %f", acting_point_velocity.x(), acting_point_velocity.y());
 
-    if (x(i) > params_.upper_joint_limits[i])
-      cost += params_.Q_joint_limit +
-              params_.Q_joint_limit_slope *
-                  std::pow(x(i) - params_.upper_joint_limits[i], 2);
-  }
+            // Normalize both vectors for alignment comparison
+            Eigen::Vector2d normalized_target_velocity = acting_point_velocity.normalized();
+            Eigen::Vector2d normalized_base_velocity = base_speed.normalized();
 
-  return cost;
+            // Calculate dot product for directional alignment
+            double direction_alignment = normalized_target_velocity.dot(normalized_base_velocity);
+
+            // Magnitude difference for speed comparison
+            double magnitude_difference = std::abs(acting_point_velocity.norm() - base_speed.norm());
+
+            // Add costs based on alignment and magnitude
+            cost += 300 * (1 - direction_alignment) + 300 * magnitude_difference;
+        }
+    }
+
+    return cost;
 }
-
-
-// /*!
-//  * @file     pendulum_cart_cost.cpp
-//  * @author   Giuseppe Rizzi
-//  * @date     10.06.2020
-//  * @version  1.0
-//  * @brief    description
-//  */
-
-// #include "mppi_manipulation/cost.h"
-// #include <ros/package.h>
-// #include "mppi_manipulation/dimensions.h"
-// #include <std_msgs/Float32.h>
-// #include <limits>
-// #include <fcl/fcl.h>
-
-// using namespace manipulation;
-
-// PandaCost::PandaCost(const CostParams& params) : params_(params) {
-//   robot_model_.init_from_xml(params_.robot_description);
-//   object_model_.init_from_xml(params_.object_description);
-// }
-
-// void PandaCost::createSSVsForRollout(std::vector<SSV>& ssvs, const mppi_pinocchio::RobotModel& robot_model) {
-//     // Base link SSVs
-//     // SSV AB, CD1, CD2;
-
-    
-//     // fcl::CollisionObjectd link2(std::make_shared<fcl::Capsuled>(0.05, 0.4), fcl::Transform3d());
-
-//     // Get the base link's position from the rollout state
-//     Eigen::Vector3d base_pos = robot_model.get_pose("base_link").translation;
-//     fcl::Transform3d ab;
-//     ab.translation() = base_pos;
-//     fcl::CollisionObjectd AB(std::make_shared<fcl::Capsuled>(0.3, 0.5552), ab);
-
-//     Eigen::Vector3d CD1_point1 = base_pos + Eigen::Vector3d(-0.2256, 0.07, 0.481);
-//     Eigen::Vector3d CD1_point2 = base_pos + Eigen::Vector3d(-0.2256, 0.07, 1.3);
-//     Eigen::Vector3d midpoint = (CD1_point1 + CD1_point2) / 2.0;
-//     Eigen::Vector3d direction = CD1_point2 - CD1_point1;
-//     double length = direction.norm();
-//     Eigen::Quaterniond orientation = Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d::UnitZ(), direction.normalized());
-//     fcl::Transform3d cd1;
-//     cd1.translation() = midpoint;
-//     cd1.linear() = orientation.toRotationMatrix();
-//     fcl::CollisionObjectd CD1(std::make_shared<fcl::Capsuled>(0.09, length), cd1);
-
-//     Eigen::Vector3d CD2_point1 = base_pos + Eigen::Vector3d(-0.2256, -0.07, 0.481);
-//     Eigen::Vector3d CD2_point2 = base_pos + Eigen::Vector3d(-0.2256, -0.07, 1.3);
-//     midpoint = (CD2_point1 + CD2_point2) / 2.0;
-//     direction = CD2_point2 - CD2_point1;
-//     length = direction.norm();
-//     orientation = Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d::UnitZ(), direction.normalized());
-//     fcl::Transform3d cd2;
-//     cd2.translation() = midpoint;
-//     cd2.linear() = orientation.toRotationMatrix();
-//     fcl::CollisionObjectd CD2(std::make_shared<fcl::Capsuled>(0.09, length), cd2);
-
-//     // AB.point1 = base_pos + Eigen::Vector3d(0.2776, 0, 0.2405);
-//     // AB.point2 = base_pos + Eigen::Vector3d(-0.2776, 0, 0.2405);
-//     // AB.radius = 0.3;
-//     // ssvs.push_back(AB);
-
-//     // CD1.point1 = base_pos + Eigen::Vector3d(-0.2256, 0.07, 0.481);
-//     // CD1.point2 = base_pos + Eigen::Vector3d(-0.2256, 0.07, 1.3);
-//     // CD1.radius = 0.09;
-//     // ssvs.push_back(CD1);
-
-//     // CD2.point1 = base_pos + Eigen::Vector3d(-0.2256, -0.07, 0.481);
-//     // CD2.point2 = base_pos + Eigen::Vector3d(-0.2256, -0.07, 1.3);
-//     // CD2.radius = 0.09;
-//     // ssvs.push_back(CD2);
-
-//     // Manipulator SSVs
-//     // SSV EF, FG, GH, I;
-
-//     // Use the robot model to get the positions of the manipulator links based on rollout joint states
-//     Eigen::Vector3d panda_link0 = robot_model.get_pose("panda_link0").translation;
-//     Eigen::Vector3d panda_link2 = robot_model.get_pose("panda_link2").translation;
-
-//     fcl::Transform3d ef;
-//     ef.translation() = panda_link0;
-//     fcl::CollisionObjectd EF(std::make_shared<fcl::Capsuled>(0.07, 0.1), ef);
-    
-//     // EF.point1 = panda_link0;
-//     // EF.point2 = panda_link2;
-//     // EF.radius = 0.07;
-//     // ssvs.push_back(EF);
-
-//     // FG.point1 = panda_link2;
-//     // FG.point2 = robot_model.get_pose("panda_link3").translation;
-//     // FG.radius = 0.07;
-//     // ssvs.push_back(FG);
-
-//     // GH.point1 = robot_model.get_pose("panda_link_4_1").translation;
-//     // GH.point2 = Eigen::Vector3d(0, 0.025, 0) + robot_model.get_pose("panda_link5").translation;
-//     // GH.radius = 0.09;
-//     // ssvs.push_back(GH);
-
-//     // I.point1 = robot_model.get_pose("panda_link7").translation;
-//     // I.point2 = robot_model.get_pose("panda_link8").translation;
-//     // I.radius = 0.1;
-//     // ssvs.push_back(I);
-// }
-
-// double PandaCost::calculateDistance(const Eigen::Vector3d& P1, const Eigen::Vector3d& P2,
-//                          const Eigen::Vector3d& Q1, const Eigen::Vector3d& Q2) {
-//     Eigen::Vector3d u = P2 - P1;
-//     Eigen::Vector3d v = Q2 - Q1;
-//     Eigen::Vector3d w = P1 - Q1;
-
-//     double a = u.dot(u);
-//     double b = u.dot(v);
-//     double c = v.dot(v);
-//     double d = u.dot(w);
-//     double e = v.dot(w);
-
-//     double denominator = a * c - b * b;
-
-//     double s, t;
-//     if (denominator < 1e-8) {  // Lines are almost parallel
-//         s = 0.0;
-//         t = (b > c ? d / b : e / c);
-//     } else {
-//         s = (b * e - c * d) / denominator;
-//         t = (a * e - b * d) / denominator;
-//     }
-
-//     // Clamp s and t to the range [0, 1]
-//     s = std::max(0.0, std::min(1.0, s));
-//     t = std::max(0.0, std::min(1.0, t));
-
-//     // Closest points on the two segments
-//     Eigen::Vector3d P_closest = P1 + s * u;
-//     Eigen::Vector3d Q_closest = Q1 + t * v;
-
-//     double distance = (P_closest - Q_closest).norm();
-
-//     return distance;
-// }
-
-
-// double PandaCost::calculateMinDistance(const std::vector<SSV>& ssvs) {
-//     double min_distance = std::numeric_limits<double>::max();
-
-//     std::vector<std::pair<int, int>> ignorePairs = {
-//         {0, 1},  // AB and CD1
-//         {0, 2},  // AB and CD2
-//         {1, 2},  // AB and CD2
-//         {0, 3},  // AB and EF
-//         {3, 4},  // EF and FG
-//         {4, 5},  // FG and GH
-//         {5, 6}   // GH and I
-//     };
-
-//     for (size_t i = 0; i < ssvs.size(); ++i) {
-//         for (size_t j = i + 1; j < ssvs.size(); ++j) {
-//             bool skip = false;
-//             for (const auto& pair : ignorePairs) {
-//                 if ((i == pair.first && j == pair.second) || (i == pair.second && j == pair.first)) {
-//                     skip = true;
-//                     break;
-//                 }
-//             }
-//             if (skip) continue;
-
-//             // Calculate distance and subtract radii
-//             double distance = calculateDistance(ssvs[i].point1, ssvs[i].point2, ssvs[j].point1, ssvs[j].point2);
-//             double link_distance = distance - (ssvs[i].radius + ssvs[j].radius);
-//             if (!std::isnan(link_distance) && link_distance < min_distance) {
-//                 min_distance = link_distance;
-//             }
-//         }
-//     }
-//     // ROS_INFO_STREAM("min_distance = " << min_distance);
-//     return min_distance;
-// }
-
-
-// mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
-//                                      const mppi::input_t& u,
-//                                      const mppi::reference_t& ref,
-//                                      const double t) {
-//   double cost = 0.0;
-  
-//   // int mode = ref(PandaDim::REFERENCE_DIMENSION - 1);
-//   int mode = 0;
-
-//   robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
-//   object_model_.update_state(x.segment<1>(2 * BASE_ARM_GRIPPER_DIM));
-  
-//   // regularization cost
-//   cost += params_.Qreg *
-//           x.segment<BASE_ARM_GRIPPER_DIM>(BASE_ARM_GRIPPER_DIM).norm();
-  
-//   // end effector reaching cost
-//   if (mode == 0) {
-//     Eigen::Vector3d ref_t = ref.head<3>();
-//     Eigen::Quaterniond ref_q(ref.segment<4>(3));
-//     robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
-//     cost +=
-//         (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
-//     cost +=
-//         (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
-
-//     if (x(2 * BASE_ARM_GRIPPER_DIM + 2 * OBJECT_DIMENSION) > 0) cost += params_.Qc;
-//   }
-
-//   // handle reaching cost
-//   else if (mode == 1) {
-//     error_ = mppi_pinocchio::diff(
-//         robot_model_.get_pose(params_.tracked_frame),
-//         object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
-//     cost +=
-//         (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
-//     cost +=
-//         (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
-
-//     // contact cost
-//     if (x(2*BASE_ARM_GRIPPER_DIM + 2*OBJECT_DIMENSION) > 0) {
-//       cost += params_.Qc;
-//     }
-//   }
-
-//   // object displacement cost
-//   else if (mode == 2) {
-//     error_ = mppi_pinocchio::diff(
-//         robot_model_.get_pose(params_.tracked_frame),
-//         object_model_.get_pose(params_.handle_frame) * params_.grasp_offset);
-//     cost +=
-//         (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt2;
-//     cost +=
-//         (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr2;
-
-//     double object_error =
-//         x(2 * BASE_ARM_GRIPPER_DIM) -
-//         ref(REFERENCE_POSE_DIMENSION + REFERENCE_OBSTACLE);
-
-//     cost += object_error * object_error * params_.Q_obj;
-//   }
-  
-//   // power cost
-//   // cost += params_.Q_power * std::max(0.0, (-x.tail<12>().head<10>().transpose() * u.head<10>())(0) - params_.max_power); 
-  
-//   // self collision cost
-// //   robot_model_.get_offset(params_.collision_link_0, params_.collision_link_1,
-// //                           collision_vector_);
-// //   cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - collision_vector_.norm()), 2);
-  
-//   // TODO(giuseppe) hard coded for now to match the collision pairs of the safety filter
-// //   robot_model_.get_offset("panda_link0", "panda_link7", collision_vector_);
-// //   cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - collision_vector_.norm()), 2);
-
-//   // SSV-based self-collision cost <TODO : calculate minimum link distance for simulated joint states, not current joint states>
-//   std::vector<SSV> ssvs;
-//   createSSVsForRollout(ssvs, robot_model_);  // Calculate link positions based on rollout joint states
-//   double min_distance = calculateMinDistance(ssvs);
-
-//   if(min_distance < 0.05)
-//   {
-//     cost += 1000000 * std::pow(std::max(0.0, params_.collision_threshold - min_distance), 2);
-//   }
-
-//   // cost += params_.Q_collision * std::pow(std::max(0.0, params_.collision_threshold - min_distance), 2);
-
-//   // arm reach cost
-//   double reach;
-//   robot_model_.get_offset(params_.arm_base_frame, params_.tracked_frame,
-//                           distance_vector_);
-//   reach = distance_vector_.head<2>().norm();
-//   if (reach > params_.max_reach) {
-//     cost += params_.Q_reach +
-//             params_.Q_reachs * (std::pow(reach - params_.max_reach, 2));
-//   }
-
-//   if (distance_vector_.norm() < params_.min_dist) {
-//     cost += params_.Q_reach +
-//             params_.Q_reachs * (std::pow(reach - params_.min_dist, 2));
-//   }
-  
-//   // joint limits cost
-//   for (size_t i = 0; i < 10; i++) {
-//     if (x(i) < params_.lower_joint_limits[i])
-//       cost += params_.Q_joint_limit +
-//               params_.Q_joint_limit_slope *
-//                   std::pow(params_.lower_joint_limits[i] - x(i), 2);
-
-//     if (x(i) > params_.upper_joint_limits[i])
-//       cost += params_.Q_joint_limit +
-//               params_.Q_joint_limit_slope *
-//                   std::pow(x(i) - params_.upper_joint_limits[i], 2);
-//   }
-
-//   return cost;
-// }

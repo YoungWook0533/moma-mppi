@@ -201,7 +201,7 @@ void findClosestSSVs(ros::Publisher& min_distance_pub, const std::vector<std::sh
     }
 
     if (min_distance <= 0) {
-        // ROS_WARN_STREAM("Self-collision detected!");
+        ROS_WARN_STREAM("Self-collision detected!");
     }
 
     // Publish the minimum distance
@@ -246,7 +246,7 @@ void publishDistanceToDBB(ros::Publisher& dbb_distance_pub, ros::Publisher& ee_p
 
     std_msgs::Float32 distance_msg;
     distance_msg.data = distance;
-    // dbb_distance_pub.publish(distance_msg);
+    dbb_distance_pub.publish(distance_msg);
 }
 
 

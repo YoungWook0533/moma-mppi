@@ -230,7 +230,7 @@ bool PandaControllerInterface::init_reference_to_current_pose(
 }
 
 double PandaControllerInterface::get_stage_cost(const mppi::observation_t& x,
-                                                const mppi::input_t& u,
+                                                mppi::input_t& u,
                                                 const double t) {
   if (!reference_set_) return -1.0;
   return local_cost_->get_stage_cost(x, u, t);
@@ -243,7 +243,7 @@ void PandaControllerInterface::ee_pose_desired_callback(
   Eigen::VectorXd pr = Eigen::VectorXd::Zero(7);
   ref_.rr[0].head<7>()(0) = msg->pose.position.x;
   ref_.rr[0].head<7>()(1) = msg->pose.position.y;
-  ref_.rr[0].head<7>()(2) = msg->pose.position.z;
+  ref_.rr[0].head<7>()(2) = msg->pose.position.z - 0.05;
   ref_.rr[0].head<7>()(3) = msg->pose.orientation.x;
   ref_.rr[0].head<7>()(4) = msg->pose.orientation.y;
   ref_.rr[0].head<7>()(5) = msg->pose.orientation.z;
@@ -281,7 +281,7 @@ mppi_pinocchio::Pose PandaControllerInterface::get_pose_end_effector(
     mppi_pinocchio::Pose ee_pose = robot_model_.get_pose("panda_grasp");
 
     // Add the wheel radius offset to the z component of the translation vector
-    // ee_pose.translation.z() += 0.05;
+    ee_pose.translation.z() += 0.05;
 
     return ee_pose;
 }

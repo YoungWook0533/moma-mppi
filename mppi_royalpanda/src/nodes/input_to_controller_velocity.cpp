@@ -30,35 +30,6 @@
 //         input_sub_ = nh_.subscribe<std_msgs::Float32MultiArray>("/input", 1, &VelocityToEffortConverter::inputCallback, this);
 //         joint_state_sub_ = nh_.subscribe<sensor_msgs::JointState>("/joint_states", 1, &VelocityToEffortConverter::jointStateCallback, this);
 
-//         // Initialize PID controllers for each joint (7 joints for Panda)
-//         for (int i = 0; i < 7; ++i) {
-//             control_toolbox::Pid pid;
-//             switch (i) {
-//                 case 0:
-//                     pid.initPid(800.0, 0.01, 2.0 * sqrt(800.0), 100.0, -100.0);
-//                     break;
-//                 case 1:
-//                     pid.initPid(800.0, 0.01, 2.0 * sqrt(800.0), 100.0, -100.0);
-//                     break;
-//                 case 2:
-//                     pid.initPid(800.0, 0.01, 2.0 * sqrt(800.0), 100.0, -100.0);
-//                     break;
-//                 case 3:
-//                     pid.initPid(800.0, 0.01, 2.0 * sqrt(800.0), 100.0, -100.0);
-//                     break;
-//                 case 4:
-//                     pid.initPid(800.0, 0.01, 2.0 * sqrt(800.0), 100.0, -100.0);
-//                     break;
-//                 case 5:
-//                     pid.initPid(800.0, 0.01, 2.0 * sqrt(800.0), 100.0, -100.0);
-//                     break;
-//                 case 6:
-//                     pid.initPid(20.0, 0.01, 2.0 * sqrt(20.0), 100.0, -100.0);
-//                     break;
-//             }
-//             pid_controllers_.push_back(pid);
-//         }
-
 //         previous_effort_cmd_.data.resize(7, 0.0);  // Initialize previous effort
 //         effort_computed_in_time_ = false;
 //     }
@@ -88,49 +59,41 @@
 //     }
 
 //     void jointStateCallback(const sensor_msgs::JointState::ConstPtr& msg) {
-//         ros::Time start_time = ros::Time::now();
-
-//         try {
-//             if (msg->position.size() < 7 || msg->velocity.size() < 7) {
-//                 ROS_WARN_STREAM("Joint state size is less than expected.");
-//                 return;
-//             }
-
-//             // Update the current joint positions and velocities from the message
-//             for (int i = 0; i < 7; ++i) {
-//                 q_[i] = msg->position[i];
-//                 v_[i] = msg->velocity[i];
-//             }
-
-//             // Compute the joint accelerations using PID control
-//             for (int i = 0; i < 7; ++i) {
-//                 double velocity_error = desired_velocities_[i] - v_[i];
-//                 q_dd_[i] = pid_controllers_[i].computeCommand(velocity_error, ros::Duration(0.002));
-//             }
-
-//             pinocchio::computeAllTerms(model, data_, q_, v_);
-//             Eigen::VectorXd tau = data_.M * q_dd_ + data_.nle;
-
-//             // Store the computed efforts in the previous_effort_cmd_
-//             for (int i = 0; i < 7; ++i) {
-//                 previous_effort_cmd_.data[i] = tau[i];
-//             }
-
-//             // Mark that the effort was successfully computed
-//             effort_computed_in_time_ = true;
-
-//             // Log the computation duration for debugging
-//             ros::Duration computation_duration = ros::Time::now() - start_time;
-//             if (computation_duration.toSec() > 0.002) {
-//                 ROS_WARN("Computation time exceeded: %f seconds", computation_duration.toSec());
-//                 effort_computed_in_time_ = false;  // Mark computation as failed
-//             }
-
-//         } catch (const std::exception& e) {
-//             ROS_ERROR("Error in jointStateCallback: %s", e.what());
-//             effort_computed_in_time_ = false;  // Mark computation as failed
+//         if (msg->position.size() < 7 || msg->velocity.size() < 7) {
+//             ROS_WARN("Joint state size is less than expected.");
+//             return;
 //         }
+
+//         if (desired_velocities_.size() < 7) {
+//             ROS_WARN("Desired velocities are not initialized. Skipping callback.");
+//             return;
+//         }
+
+//         // Update joint states
+//         for (int i = 0; i < 7; ++i) {
+//             q_[i] = msg->position[i];
+//             v_[i] = msg->velocity[i];
+//         }
+
+       
+
+        
+//         for (int i = 0; i < 7; ++i) {
+//             q_dd_[i] = (desired_velocities_[i] - v_[i]) / delta_time.toSec();
+//         }
+        
+        
+
+//         pinocchio::computeAllTerms(model, data_, q_, v_);
+
+//         Eigen::VectorXd tau = data_.M * q_dd_ + data_.nle;
+
+//         for (int i = 0; i < 7; ++i) {
+//             previous_effort_cmd_.data[i] = tau[i];
+//         }
+//         effort_computed_in_time_ = true;
 //     }
+
 
 //     void publishEffort() {
 //         try {
@@ -172,7 +135,7 @@
 //     VelocityToEffortConverter converter;
 
 //     // Set the control loop rate to 1000 Hz
-//     ros::Rate loop_rate(1000);
+//     ros::Rate loop_rate(100);
 
 //     while (ros::ok()) {
 //         ros::spinOnce();
