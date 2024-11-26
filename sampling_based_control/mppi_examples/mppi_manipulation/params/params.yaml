@@ -3,7 +3,7 @@ dynamics:
   object_handle_link: handle_link
   object_handle_joint: handle_joint
   articulation_joint: articulation_joint
-  initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
+  initial_state: [ 0.0, 0.0, 0.0, -0.05925593266179649, -0.9223217029137413, 0.012592808440404684, -2.183727073812039, -0.03402632339571556, 1.298460043116138, 0.7386671485088371, 0.04, 0.04,    # robot position
                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
                    0.0,                                                                    # object joint position
                    0.0,                                                                    # object joint velocity
@@ -55,7 +55,7 @@ sim_dynamics:
       i_max: [ 0.0, 0.0 ]
 
 cost:
-  regularization: 0.0
+  regularization: 10.0
   linear_weight: 100.0
   linear_weight_opening: 10.0
 
@@ -89,11 +89,11 @@ cost:
   power_weight: 0.0
 
   handle_frame: handle_link
-  tracked_frame: panda_grasp
-  arm_base_frame: panda_link0
+  tracked_frame: fr3_hand_tcp
+  arm_base_frame: fr3_link0
 
-  collision_link_0: panda_link1
-  collision_link_1: panda_link7
+  collision_link_0: fr3_link1
+  collision_link_1: fr3_link7
   collision_threshold: 0.35
   collision_weight: 1000
 

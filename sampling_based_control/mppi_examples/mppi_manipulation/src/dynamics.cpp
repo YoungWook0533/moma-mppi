@@ -163,7 +163,7 @@ mppi::input_t PandaRaisimDynamics::get_zero_input(
 
 void PandaRaisimDynamics::get_end_effector_pose(
     Eigen::Vector3d& position, Eigen::Quaterniond& orientation) {
-  size_t frame_id = panda_->getFrameIdxByName("panda_grasp_joint");
+  size_t frame_id = panda_->getFrameIdxByName("fr3_hand_tcp_joint");
   raisim::Vec<3> pos;
   raisim::Mat<3, 3> rot;
   panda_->getFramePosition(frame_id, pos);
@@ -221,7 +221,7 @@ void PandaRaisimDynamics::get_external_torque(Eigen::VectorXd& tau) {
 
   if (ee_force_applied_){
     J_contact_.setZero();
-    panda_->getDenseFrameJacobian("panda_grasp_joint", J_contact_);
+    panda_->getDenseFrameJacobian("fr3_hand_tcp_joint", J_contact_);
 
     // clang-format off
     J_contact_.topLeftCorner<3, 3>() << std::cos(x_(2)), -std::sin(x_(2)), 0,
@@ -235,7 +235,7 @@ void PandaRaisimDynamics::get_external_torque(Eigen::VectorXd& tau) {
 
 void PandaRaisimDynamics::get_external_wrench(Eigen::VectorXd& wrench) {
   wrench.setZero(6);
-  size_t frame_id = panda_->getFrameIdxByName("panda_grasp_joint");
+  size_t frame_id = panda_->getFrameIdxByName("fr3_hand_tcp_joint");
   raisim::Vec<3> pos;
   raisim::Mat<3, 3> rot;
   panda_->getFramePosition(frame_id, pos);
@@ -276,8 +276,8 @@ void PandaRaisimDynamics::get_ee_jacobian(Eigen::MatrixXd& J){
   Eigen::MatrixXd J_angular;
   J_angular.setZero(3, 12);
 
-  panda_->getDenseFrameJacobian("panda_grasp_joint", J_linear);
-  panda_->getDenseFrameRotationalJacobian("panda_grasp_joint", J_angular);
+  panda_->getDenseFrameJacobian("fr3_hand_tcp_joint", J_linear);
+  panda_->getDenseFrameRotationalJacobian("fr3_hand_tcp_joint", J_angular);
   J.topRows(3) = J_linear;
   J.bottomRows(3) = J_angular;
   // clang-format off
@@ -289,7 +289,7 @@ void PandaRaisimDynamics::get_ee_jacobian(Eigen::MatrixXd& J){
 
 void PandaRaisimDynamics::set_external_ee_force(const Eigen::Vector3d& f) {
   ee_force_applied_ = (f.norm() > 1e-4);
-  auto& frame = panda_->getFrameByName("panda_grasp_joint");
+  auto& frame = panda_->getFrameByName("fr3_hand_tcp_joint");
   panda_->setExternalForce(frame.parentId, raisim::ArticulatedSystem::Frame::WORLD_FRAME, f, raisim::ArticulatedSystem::Frame::BODY_FRAME, raisim::Vec<3>());
 }
 

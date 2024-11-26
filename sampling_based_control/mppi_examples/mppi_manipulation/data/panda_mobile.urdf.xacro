@@ -24,7 +24,7 @@
             <parent link="world"/>
             <child link="omni_base_root_link"/>
         </joint>
-        <xacro:planar_base connect_to="base_link"/>
+        <xacro:planar_base connect_to="robot_base_link"/>
     </xacro:unless>
 
     <!-- <xacro:if value="$(arg fixed_base)">
@@ -38,7 +38,7 @@
     <xacro:if value="$(arg fixed_base)">
         <joint name="world_joint" type="fixed">
             <parent link="world"/>
-            <child link="base_link"/>
+            <child link="robot_base_link"/>
              <origin xyz="-0.5265965085817698 -0.2806388380571893 0.0" rpy="0.000 0.000 -0.04332860681335808"/>
         </joint>
     </xacro:if>
@@ -59,7 +59,7 @@
     <!-- <xacro:panda_robot parent_link="franka_mount_link"/> -->
 
     <joint name="arm_mount_joint" type="fixed">
-        <parent link="base_link"/>
+        <parent link="robot_base_link"/>
         <child link="franka_mount_link"/>
         <origin xyz="0.295 0.005 0.445" rpy="0 0 0"/>
 
@@ -69,12 +69,12 @@
 
     <!--    Add utility grasp frame-->
     <xacro:if value="${add_finger}">
-        <link name="panda_grasp"/>
-        <joint name="panda_grasp_joint" type="fixed">
-            <parent link="panda_hand"/>
-            <child link="panda_grasp"/>
-            <axis xyz="0 1 0"/>
-            <origin xyz="0 0 0.095" rpy="0 0 0"/> <!-- 0.106-->
+        <link name="fr3_hand_tcp"/>
+        <joint name="fr3_hand_tcp_joint" type="fixed">
+            <parent link="fr3_hand"/>
+            <child link="fr3_hand_tcp"/>
+            <axis xyz="0 0 0"/>
+            <origin xyz="0 0 0.1034" rpy="0 0 0"/> <!-- 0.106-->
         </joint>
     </xacro:if>
 

@@ -48,7 +48,7 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   std::string wrench_topic;
   nh_.param<std::string>("wrench_topic", wrench_topic, "/wrench");
 
-  std::string odom_topic = "/Odometry"; // Using the /Odometry topic for both pose and twist
+  std::string odom_topic = "/robot/robotnik_base_control/odom"; // Using the /Odometry topic for both pose and twist
 
   ROS_INFO_STREAM(
       "Subscribing arm state to: " << arm_state_topic << std::endl
@@ -142,8 +142,8 @@ bool StateObserver::initialize() {
   //   return false;
   // }
 
-  if (!robot_kinematics.getChain("world", "panda_hand", world_to_ee_chain_)) {
-    ROS_ERROR("Failed to extract chain from world to panda_hand");
+  if (!robot_kinematics.getChain("world", "fr3_hand_tcp", world_to_ee_chain_)) {
+    ROS_ERROR("Failed to extract chain from world to fr3_hand_tcp");
     return false;
   }
   kdl_joints_.resize(world_to_ee_chain_.getNrOfJoints());

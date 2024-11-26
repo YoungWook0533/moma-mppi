@@ -236,7 +236,7 @@ void RoyalPandaSim::read_sim(ros::Time time, ros::Duration period) {
 
   // clang-format on
   for (int i = 0; i < 7; i++) {
-    std::string name = "panda_joint" + std::to_string(i + 1);
+    std::string name = "fr3_joint" + std::to_string(i + 1);
     this->robot_state_.q[i] = arm_joint_position_[i];
     this->robot_state_.dq[i] = arm_joint_velocity_[i];
     this->robot_state_.tau_J[i] = arm_joint_effort_[i];
@@ -321,7 +321,7 @@ void RoyalPandaSim::read_sim(ros::Time time, ros::Duration period) {
   }
   wrench_filter_->update(wrench_temp_, wrench_filtered_);
   wrench_ros_.header.stamp = time;
-  wrench_ros_.header.frame_id = "panda_hand";
+  wrench_ros_.header.frame_id = "fr3_hand";
   wrench_ros_.wrench.force.x = wrench_filtered_[0];
   wrench_ros_.wrench.force.y = wrench_filtered_[1];
   wrench_ros_.wrench.force.z = wrench_filtered_[2];

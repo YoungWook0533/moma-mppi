@@ -162,7 +162,7 @@ geometry_msgs::PoseStamped PandaControllerInterface::get_pose_end_effector_ros(
     const Eigen::VectorXd& x) {
   geometry_msgs::PoseStamped pose_ros;
   robot_model_.update_state(x.head<7>());
-  mppi_pinocchio::Pose pose = robot_model_.get_pose("panda_hand");
+  mppi_pinocchio::Pose pose = robot_model_.get_pose("fr3_hand");
   mppi_pinocchio::to_msg(pose, pose_ros.pose);
   pose_ros.header.stamp = ros::Time::now();
   pose_ros.header.frame_id = "world";
@@ -182,7 +182,7 @@ void PandaControllerInterface::publish_ros() {
 
   for (const auto& x : x_opt_) {
     robot_model_.update_state(x.head<7>());
-    mppi_pinocchio::Pose pose = robot_model_.get_pose("panda_hand");
+    mppi_pinocchio::Pose pose = robot_model_.get_pose("fr3_hand");
     mppi_pinocchio::to_msg(pose, pose_temp_ros.pose);
     optimal_path_.poses.push_back(pose_temp_ros);
   }

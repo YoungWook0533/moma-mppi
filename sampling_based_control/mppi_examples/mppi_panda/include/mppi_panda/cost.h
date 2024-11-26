@@ -33,7 +33,7 @@ class PandaCost : public mppi::Cost {
   double angular_weight_;
   double obstalce_radius_;
 
-  std::string tracked_frame_ = "panda_hand";
+  std::string tracked_frame_ = "fr3_hand";
   int frame_id_;
   Eigen::Matrix<double, 3, 3> Q_linear_;
   Eigen::Matrix<double, 3, 3> Q_angular_;
@@ -59,7 +59,7 @@ class PandaCost : public mppi::Cost {
   void set_obstacle_radius(const double r) { obstacle_radius_ = r; }
 
   mppi::cost_t compute_cost(const mppi::observation_t& x,
-                            const mppi::input_t& u,
+                            mppi::input_t& u,
                             const mppi::reference_t& ref,
                             const double t) override;
 };

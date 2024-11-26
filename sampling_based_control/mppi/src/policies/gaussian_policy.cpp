@@ -75,12 +75,16 @@ void GaussianPolicy::update_delay(const int delay_steps) {
 }
 
 Eigen::VectorXd GaussianPolicy::nominal(double t) {
+
+  t = std::max(t_.minCoeff(), std::min(t, t_.maxCoeff()));
   size_t time_idx =
       std::distance(t_.data(),
                     std::upper_bound(t_.data(), t_.data() + t_.size(), t)) -
       1;
 
-  double alpha = (t - t_(time_idx)) / (t_(time_idx + 1) - t_(time_idx));
+  double alpha = (t - t_(time_idx)) / 1e-8;
+  // std::cout << "alpha: " << (1 - alpha) * nominal_.row(time_idx) +
+  //        alpha * nominal_.row(time_idx + 1) << std::endl;
   return (1 - alpha) * nominal_.row(time_idx) +
          alpha * nominal_.row(time_idx + 1);
 }

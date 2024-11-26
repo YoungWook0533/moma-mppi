@@ -74,11 +74,11 @@
     </gazebo>
     <gazebo>
         <plugin filename="libgazebo_ros_planar_move.so" name="omni_steering">
-            <commandTopic>robotnik_base_control/cmd_vel</commandTopic>
+            <commandTopic>robot/robotnik_base_control/cmd_vel</commandTopic>
             <odometryTopic>robotnik_base_control/odom</odometryTopic>
-            <odometryFrame>summit_xl_odom</odometryFrame>
+            <odometryFrame>robot_odom</odometryFrame>
             <odometryRate>50.0</odometryRate>
-            <robotBaseFrame>summit_xl_base_footprint</robotBaseFrame>
+            <robotBaseFrame>robot_base_footprint</robotBaseFrame>
             <publishTF>False</publishTF>
             <enableYAxis>true</enableYAxis>
         </plugin>
@@ -105,7 +105,7 @@
 		</joint>
 	  </xacro:if> -->
     <!-- BASE_LINK -->
-    <link name="base_link">
+    <link name="robot_base_link">
         <inertial>
             <mass value="125.0" />
             <origin xyz="0 0 0" rpy="0 0 0" />
@@ -127,11 +127,11 @@
             </geometry>
         </collision> -->
     </link>
-    <gazebo reference="base_link">
+    <gazebo reference="robot_base_link">
         <material>Gazebo/Black</material>
     </gazebo>
     <!-- CHAPAS INOX TAPAS -->
-    <link name="summit_xl_base_chapa">
+    <link name="robot_base_chapa">
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
@@ -142,13 +142,13 @@
             </material>
         </visual>
     </link>
-    <joint name="summit_xl_base_tapa_joint" type="fixed">
+    <joint name="robot_base_tapa_joint" type="fixed">
         <origin rpy="0 0 0" xyz="0.0 0 0.38062" />
-        <parent link="base_link" />
-        <child link="summit_xl_base_chapa" />
+        <parent link="robot_base_link" />
+        <child link="robot_base_chapa" />
     </joint>
     <!-- LOGO ROBOTNIK IZQUIERDO -->
-    <link name="summit_xl_base_logo_left">
+    <link name="robot_base_logo_left">
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
@@ -159,13 +159,13 @@
             </material>
         </visual>
     </link>
-    <joint name="summit_xl_base_logo_left_joint" type="fixed">
+    <joint name="robot_base_logo_left_joint" type="fixed">
         <origin rpy="0 0 0" xyz="0.0 0.28931 0.29062" />
-        <parent link="base_link" />
-        <child link="summit_xl_base_logo_left" />
+        <parent link="robot_base_link" />
+        <child link="robot_base_logo_left" />
     </joint>
     <!-- LOGO ROBOTNIK DERECHO -->
-    <link name="summit_xl_base_logo_right">
+    <link name="robot_base_logo_right">
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
@@ -176,13 +176,13 @@
             </material>
         </visual>
     </link>
-    <joint name="summit_xl_base_logo_right_joint" type="fixed">
+    <joint name="robot_base_logo_right_joint" type="fixed">
         <origin rpy="0 0 3.141592653589793" xyz="0.0 -0.28931 0.29062" />
-        <parent link="base_link" />
-        <child link="summit_xl_base_logo_right" />
+        <parent link="robot_base_link" />
+        <child link="robot_base_logo_right" />
     </joint>
     <!-- LOGO ROBOTNIK FRONTAL -->
-    <link name="summit_xl_base_logo_front">
+    <link name="robot_base_logo_front">
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
@@ -193,13 +193,13 @@
             </material>
         </visual>
     </link>
-    <joint name="summit_xl_base_logo_front_joint" type="fixed">
+    <joint name="robot_base_logo_front_joint" type="fixed">
         <origin rpy="0 0 -1.5707963267948966" xyz="0.345 0.0 0.0" />
-        <parent link="base_link" />
-        <child link="summit_xl_base_logo_front" />
+        <parent link="robot_base_link" />
+        <child link="robot_base_logo_front" />
     </joint>
     <!-- LOGO ROBOTNIK TRASERO -->
-    <link name="summit_xl_base_logo_rear">
+    <link name="robot_base_logo_rear">
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
@@ -210,10 +210,10 @@
             </material>
         </visual>
     </link>
-    <joint name="summit_xl_base_logo_rear_joint" type="fixed">
+    <joint name="robot_base_logo_rear_joint" type="fixed">
         <origin rpy="0 0 1.5707963267948966" xyz="-0.345 0.0 0.0" />
-        <parent link="base_link" />
-        <child link="summit_xl_base_logo_rear" />
+        <parent link="robot_base_link" />
+        <child link="robot_base_logo_rear" />
     </joint>
     <!-- DOCKING CONTACT -->
     <!--link name="${prefix}base_docking_contact">
@@ -224,7 +224,7 @@
       <parent link="${prefix}base_link"/>
       <child link="${prefix}base_docking_contact" />
     </joint-->
-    <link name="summit_xl_top_structure">
+    <link name="robot_top_structure">
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
@@ -239,7 +239,7 @@
     <!-- camera body, with origin at bottom screw mount -->
     <joint name="camera_joint" type="fixed">
         <origin rpy="0 0 0" xyz="-0.215 0 1.454" />
-        <parent link="summit_xl_top_structure" />
+        <parent link="robot_top_structure" />
         <child link="camera_bottom_screw_frame" />
     </joint>
     <link name="camera_bottom_screw_frame" />
@@ -324,7 +324,7 @@
     <!--/xacro:if-->
     <joint name="front_laser_base_joint" type="fixed">
         <origin rpy="3.14 0 0.785" xyz="0.435 0.34 0.4535" />
-        <parent link="summit_xl_top_structure" />
+        <parent link="robot_top_structure" />
         <child link="front_laser_base_link" />
     </joint>
     <link name="front_laser_base_link">
@@ -362,7 +362,7 @@
     <tim571_gazebo />
     <joint name="rear_laser_base_joint" type="fixed">
         <origin rpy="3.14 0 3.925" xyz="-0.435 -0.34 0.4535" />
-        <parent link="summit_xl_top_structure" />
+        <parent link="robot_top_structure" />
         <child link="rear_laser_base_link" />
     </joint>
     <link name="rear_laser_base_link">
@@ -398,20 +398,20 @@
         </collision> -->
     </link>
     <tim571_gazebo />
-    <joint name="$summit_xl_top_structure_joint" type="fixed">
+    <joint name="$robot_top_structure_joint" type="fixed">
         <origin rpy="0 0 0" xyz="0 0 -0.127" />
-        <parent link="base_link" />
-        <child link="summit_xl_top_structure" />
+        <parent link="robot_base_link" />
+        <child link="robot_top_structure" />
     </joint>
-    <joint name="summit_xl_front_right_wheel_joint" type="continuous">
-        <parent link="base_link" />
-        <child link="summit_xl_front_right_wheel_link" />
+    <joint name="robot_front_right_wheel_joint" type="continuous">
+        <parent link="robot_base_link" />
+        <child link="robot_front_right_wheel_link" />
         <origin rpy="0 0 0" xyz="0.2225 -0.2045 0.0" />
         <axis rpy="0 0 0" xyz="0 1 0" />
         <limit effort="100" velocity="100" />
         <joint_properties damping="0.0" friction="0.0" />
     </joint>
-    <link name="summit_xl_front_right_wheel_link">
+    <link name="robot_front_right_wheel_link">
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
@@ -444,17 +444,17 @@
         </inertial>
     </link>
     <!-- Transmission is important to link the joints and the controller (see summit_xl_control/config/summit_xl_control.yaml)-->
-    <transmission name="summit_xl_front_right_wheel_joint_trans">
+    <transmission name="robot_front_right_wheel_joint_trans">
         <type>transmission_interface/SimpleTransmission</type>
-        <joint name="summit_xl_front_right_wheel_joint">
+        <joint name="robot_front_right_wheel_joint">
             <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
         </joint>
-        <actuator name="summit_xl_front_right_wheel_joint_motor">
+        <actuator name="robot_front_right_wheel_joint_motor">
             <mechanicalReduction>1</mechanicalReduction>
             <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
         </actuator>
     </transmission>
-    <gazebo reference="summit_xl_front_right_wheel_link">
+    <gazebo reference="robot_front_right_wheel_link">
         <mu1 value="0.0" />
         <mu2 value="0.0" />
         <kp value="10000000.0" />
@@ -462,15 +462,15 @@
         <fdir1 value="1 0 0" />
         <turnGravityOff>false</turnGravityOff>
     </gazebo>
-    <joint name="summit_xl_front_left_wheel_joint" type="continuous">
-        <parent link="base_link" />
-        <child link="summit_xl_front_left_wheel_link" />
+    <joint name="robot_front_left_wheel_joint" type="continuous">
+        <parent link="robot_base_link" />
+        <child link="robot_front_left_wheel_link" />
         <origin rpy="0 0 0" xyz="0.2225 0.2045 0.0" />
         <axis rpy="0 0 0" xyz="0 1 0" />
         <limit effort="100" velocity="100" />
         <joint_properties damping="0.0" friction="0.0" />
     </joint>
-    <link name="summit_xl_front_left_wheel_link">
+    <link name="robot_front_left_wheel_link">
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
@@ -503,17 +503,17 @@
         </inertial>
     </link>
     <!-- Transmission is important to link the joints and the controller (see summit_xl_control/config/summit_xl_control.yaml)-->
-    <transmission name="summit_xl_front_left_wheel_joint_trans">
+    <transmission name="robot_front_left_wheel_joint_trans">
         <type>transmission_interface/SimpleTransmission</type>
-        <joint name="summit_xl_front_left_wheel_joint">
+        <joint name="robot_front_left_wheel_joint">
             <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
         </joint>
-        <actuator name="summit_xl_front_left_wheel_joint_motor">
+        <actuator name="robot_front_left_wheel_joint_motor">
             <mechanicalReduction>1</mechanicalReduction>
             <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
         </actuator>
     </transmission>
-    <gazebo reference="summit_xl_front_left_wheel_link">
+    <gazebo reference="robot_front_left_wheel_link">
         <mu1 value="0.0" />
         <mu2 value="0.0" />
         <kp value="10000000.0" />
@@ -521,15 +521,15 @@
         <fdir1 value="1 0 0" />
         <turnGravityOff>false</turnGravityOff>
     </gazebo>
-    <joint name="summit_xl_back_left_wheel_joint" type="continuous">
-        <parent link="base_link" />
-        <child link="summit_xl_back_left_wheel_link" />
+    <joint name="robot_back_left_wheel_joint" type="continuous">
+        <parent link="robot_base_link" />
+        <child link="robot_back_left_wheel_link" />
         <origin rpy="0 0 0" xyz="-0.2225 0.2045 0.0" />
         <axis rpy="0 0 0" xyz="0 1 0" />
         <limit effort="100" velocity="100" />
         <joint_properties damping="0.0" friction="0.0" />
     </joint>
-    <link name="summit_xl_back_left_wheel_link">
+    <link name="robot_back_left_wheel_link">
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
@@ -562,17 +562,17 @@
         </inertial>
     </link>
     <!-- Transmission is important to link the joints and the controller (see summit_xl_control/config/summit_xl_control.yaml)-->
-    <transmission name="summit_xl_back_left_wheel_joint_trans">
+    <transmission name="robot_back_left_wheel_joint_trans">
         <type>transmission_interface/SimpleTransmission</type>
-        <joint name="summit_xl_back_left_wheel_joint">
+        <joint name="robot_back_left_wheel_joint">
             <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
         </joint>
-        <actuator name="summit_xl_back_left_wheel_joint_motor">
+        <actuator name="robot_back_left_wheel_joint_motor">
             <mechanicalReduction>1</mechanicalReduction>
             <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
         </actuator>
     </transmission>
-    <gazebo reference="summit_xl_back_left_wheel_link">
+    <gazebo reference="robot_back_left_wheel_link">
         <mu1 value="0.0" />
         <mu2 value="0.0" />
         <kp value="10000000.0" />
@@ -580,15 +580,15 @@
         <fdir1 value="1 0 0" />
         <turnGravityOff>false</turnGravityOff>
     </gazebo>
-    <joint name="summit_xl_back_right_wheel_joint" type="continuous">
-        <parent link="base_link" />
-        <child link="summit_xl_back_right_wheel_link" />
+    <joint name="robot_back_right_wheel_joint" type="continuous">
+        <parent link="robot_base_link" />
+        <child link="robot_back_right_wheel_link" />
         <origin rpy="0 0 0" xyz="-0.2225 -0.2045 0.0" />
         <axis rpy="0 0 0" xyz="0 1 0" />
         <limit effort="100" velocity="100" />
         <joint_properties damping="0.0" friction="0.0" />
     </joint>
-    <link name="summit_xl_back_right_wheel_link">
+    <link name="robot_back_right_wheel_link">
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
@@ -621,17 +621,17 @@
         </inertial>
     </link>
     <!-- Transmission is important to link the joints and the controller (see summit_xl_control/config/summit_xl_control.yaml)-->
-    <transmission name="summit_xl_back_right_wheel_joint_trans">
+    <transmission name="robot_back_right_wheel_joint_trans">
         <type>transmission_interface/SimpleTransmission</type>
-        <joint name="summit_xl_back_right_wheel_joint">
+        <joint name="robot_back_right_wheel_joint">
             <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
         </joint>
-        <actuator name="summit_xl_back_right_wheel_joint_motor">
+        <actuator name="robot_back_right_wheel_joint_motor">
             <mechanicalReduction>1</mechanicalReduction>
             <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
         </actuator>
     </transmission>
-    <gazebo reference="summit_xl_back_right_wheel_link">
+    <gazebo reference="robot_back_right_wheel_link">
         <mu1 value="0.0" />
         <mu2 value="0.0" />
         <kp value="10000000.0" />
@@ -647,14 +647,14 @@
 		<xacro:omni_wheel_real prefix="$(arg prefix)middle_left" parent="$(arg prefix)base_link" reflect="true" hq="${hq}">
 			<origin xyz="0 ${wheel_offset_y} ${wheel_offset_z}" rpy="0 0 0"/>
 		</xacro:omni_wheel_real> -->
-    <joint name="summit_xl_imu_joint" type="fixed">
+    <joint name="robot_imu_joint" type="fixed">
         <axis xyz="1 0 0" />
         <!--origin xyz="0 0 0.2825"/-->
         <origin rpy="0 0 0" xyz="0.127 -0.129 0.212" />
-        <parent link="base_link" />
-        <child link="summit_xl_imu_link" />
+        <parent link="robot_base_link" />
+        <child link="robot_imu_link" />
     </joint>
-    <link name="summit_xl_imu_link">
+    <link name="robot_imu_link">
         <inertial>
             <origin rpy="0 0 0" xyz="0.0 0 0.01" />
             <mass value="0.005" />
@@ -682,31 +682,31 @@
     <!--<gaussianNoise>0.0</gaussianNoise>-->
     <!--</plugin>-->
     <!--</gazebo>-->
-    <gazebo reference="summit_xl_imu_link">
+    <gazebo reference="robot_imu_link">
         <gravity>true</gravity>
-        <sensor name="summit_xl_imu_imu_sensor" type="imu">
+        <sensor name="robot_imu_imu_sensor" type="imu">
             <always_on>true</always_on>
             <update_rate>100</update_rate>
             <visualize>true</visualize>
             <topic>__default_topic__</topic>
-            <plugin filename="libgazebo_ros_imu_sensor.so" name="summit_xl_imu_imu_plugin">
+            <plugin filename="libgazebo_ros_imu_sensor.so" name="robot_imu_imu_plugin">
                 <topicName>imu/data_raw</topicName>
-                <bodyName>summit_xl_imu_link</bodyName>
+                <bodyName>robot_imu_link</bodyName>
                 <updateRateHZ>100.0</updateRateHZ>
                 <gaussianNoise>0.0</gaussianNoise>
                 <xyzOffset>0 0 0</xyzOffset>
                 <rpyOffset>0 0 0</rpyOffset>
-                <frameName>summit_xl_imu_link</frameName>
+                <frameName>robot_imu_link</frameName>
             </plugin>
             <pose>0 0 0 0 0 0</pose>
         </sensor>
     </gazebo>
-    <joint name="summit_xl_velodyne_base_mount_joint" type="fixed">
+    <joint name="velodyne_base_mount_joint" type="fixed">
         <origin rpy="0 0 0" xyz="0.440 0 0.421" />
-        <parent link="base_link" />
-        <child link="summit_xl_velodyne_base_link" />
+        <parent link="robot_base_link" />
+        <child link="velodyne_base_link" />
     </joint>
-    <link name="summit_xl_velodyne_base_link">
+    <link name="velodyne_base_link">
         <inertial>
             <mass value="0.83" />
             <origin xyz="0 0 0.03585" rpy="0 0 0" />
@@ -729,12 +729,12 @@
             </geometry>
         </collision>
     </link>
-    <joint name="summit_xl_velodyne_base_scan_joint" type="fixed">
+    <joint name="velodyne_base_scan_joint" type="fixed">
         <origin rpy="0 0 0" xyz="0 0 0.0377" />
-        <parent link="summit_xl_velodyne_base_link" />
-        <child link="summit_xl_velodyne" />
+        <parent link="velodyne_base_link" />
+        <child link="velodyne" />
     </joint>
-    <link name="summit_xl_velodyne">
+    <link name="velodyne">
         <inertial>
             <mass value="0.01" />
             <origin xyz="0 0 0" />
@@ -748,7 +748,7 @@
         </visual>
     </link>
     <!-- Gazebo requires the velodyne_gazebo_plugins package -->
-    <gazebo reference="summit_xl_velodyne">
+    <gazebo reference="velodyne">
         <sensor name="velodyne-VLP16" type="ray">
             <pose>0 0 0 0 0 0</pose>
             <visualize>false</visualize>
@@ -781,7 +781,7 @@
             </ray>
             <plugin filename="libgazebo_ros_velodyne_laser.so" name="gazebo_ros_laser_controller">
                 <topicName>velodyne_points</topicName>
-                <frameName>/summit_xl_velodyne</frameName>
+                <frameName>/velodyne</frameName>
                 <min_range>0.9</min_range>
                 <max_range>130.0</max_range>
                 <gaussianNoise>0.008</gaussianNoise>
@@ -811,7 +811,7 @@
       </collision> -->
     </link>
     <joint name="mount_joint" type="fixed">
-        <parent link="base_link" />
+        <parent link="robot_base_link" />
         <child link="mount" />
         <origin rpy="0 0 1.57" xyz="0.415 0.03 0.39" />
     </joint>

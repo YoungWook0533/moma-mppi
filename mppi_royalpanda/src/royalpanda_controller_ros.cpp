@@ -28,7 +28,7 @@ bool RoyalPandaControllerRos::init(hardware_interface::RobotHW* robot_hw,
 
   if (sim_) {
     std::string arm_description;
-    if (!node_handle.getParam("/arm_description", arm_description)) {
+    if (!node_handle.getParam("/robot_description", arm_description)) {
       ROS_ERROR("Could not find arm_description on the param server.");
       return false;
     }

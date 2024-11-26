@@ -11,12 +11,12 @@ int main(int argc, char** argv) {
   ros::Publisher joint_state_pub =
       nh.advertise<sensor_msgs::JointState>("/panda/joint_states", 1);
   std::vector<std::string> joint_names{
-      "panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4",
-      "panda_joint5", "panda_joint6", "panda_joint7"};
+      "fr3_joint1", "fr3_joint2", "fr3_joint3", "fr3_joint4",
+      "fr3_joint5", "fr3_joint6", "fr3_joint7"};
 
   // make sure finger comes after
-  std::vector<std::string> fingers{"panda_finger_joint1",
-                                   "panda_finger_joint2"};
+  std::vector<std::string> fingers{"fr3_finger_joint1",
+                                   "fr3_finger_joint2"};
 
   auto cb = [&](const sensor_msgs::JointStateConstPtr& msg) {
     static sensor_msgs::JointState filtered_state;

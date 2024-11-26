@@ -259,6 +259,11 @@ class Solver {
 
   bool first_step_ = true;
 
+private:
+// Input bounds
+  Eigen::VectorXd u_min_;
+  Eigen::VectorXd u_max_;   
+
  protected:
   // time from which the current optimization has started
   double reset_time_;
@@ -268,6 +273,7 @@ class Solver {
   observation_t x_;
   // internal t0 for next optimization
   double t0_internal_;
+  double initial_time_;
   // internal x0 for next optimization
   observation_t x0_internal_;
   // state dimension

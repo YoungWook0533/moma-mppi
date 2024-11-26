@@ -5,9 +5,9 @@
 <!-- =================================================================================== -->
 <robot name="panda">
   <link name="world"/>
-  <joint name="panda_joint_world" type="fixed">
+  <joint name="fr3_joint_world" type="fixed">
     <parent link="world"/>
-    <child link="panda_link0"/>
+    <child link="fr3_link0"/>
     <origin rpy="0 0 0" xyz="0 0 0"/>
   </joint>
   <gazebo>
@@ -16,79 +16,79 @@
       <robotParam>/</robotParam>
     </plugin>
   </gazebo>
-  <gazebo reference="panda_link0"/>
-  <gazebo reference="panda_link1"/>
-  <gazebo reference="panda_link2"/>
-  <gazebo reference="panda_link3"/>
-  <gazebo reference="panda_link4"/>
-  <gazebo reference="panda_link5"/>
-  <gazebo reference="panda_link6"/>
-  <gazebo reference="panda_link7"/>
-  <gazebo reference="panda_link8"/>
-  <transmission name="panda_joint1_trans">
+  <gazebo reference="fr3_link0"/>
+  <gazebo reference="fr3_link1"/>
+  <gazebo reference="fr3_link2"/>
+  <gazebo reference="fr3_link3"/>
+  <gazebo reference="fr3_link4"/>
+  <gazebo reference="fr3_link5"/>
+  <gazebo reference="fr3_link6"/>
+  <gazebo reference="fr3_link7"/>
+  <gazebo reference="fr3_link8"/>
+  <transmission name="fr3_joint1_trans">
     <type>transmission_interface/SimpleTransmission</type>
-    <joint name="panda_joint1">
+    <joint name="fr3_joint1">
       <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
     </joint>
-    <actuator name="panda_joint1_motor">
+    <actuator name="fr3_joint1_motor">
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
-  <transmission name="panda_joint2_trans">
+  <transmission name="fr3_joint2_trans">
     <type>transmission_interface/SimpleTransmission</type>
-    <joint name="panda_joint2">
+    <joint name="fr3_joint2">
       <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
     </joint>
-    <actuator name="panda_joint2_motor">
+    <actuator name="fr3_joint2_motor">
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
-  <transmission name="panda_joint3_trans">
+  <transmission name="fr3_joint3_trans">
     <type>transmission_interface/SimpleTransmission</type>
-    <joint name="panda_joint3">
+    <joint name="fr3_joint3">
       <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
     </joint>
-    <actuator name="panda_joint3_motor">
+    <actuator name="fr3_joint3_motor">
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
-  <transmission name="panda_joint4_trans">
+  <transmission name="fr3_joint4_trans">
     <type>transmission_interface/SimpleTransmission</type>
-    <joint name="panda_joint4">
+    <joint name="fr3_joint4">
       <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
     </joint>
-    <actuator name="panda_joint4_motor">
+    <actuator name="fr3_joint4_motor">
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
-  <transmission name="panda_joint5_trans">
+  <transmission name="fr3_joint5_trans">
     <type>transmission_interface/SimpleTransmission</type>
-    <joint name="panda_joint5">
+    <joint name="fr3_joint5">
       <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
     </joint>
-    <actuator name="panda_joint5_motor">
+    <actuator name="fr3_joint5_motor">
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
-  <transmission name="panda_joint6_trans">
+  <transmission name="fr3_joint6_trans">
     <type>transmission_interface/SimpleTransmission</type>
-    <joint name="panda_joint6">
+    <joint name="fr3_joint6">
       <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
     </joint>
-    <actuator name="panda_joint6_motor">
+    <actuator name="fr3_joint6_motor">
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
-  <transmission name="panda_joint7_trans">
+  <transmission name="fr3_joint7_trans">
     <type>transmission_interface/SimpleTransmission</type>
-    <joint name="panda_joint7">
+    <joint name="fr3_joint7">
       <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
     </joint>
-    <actuator name="panda_joint7_motor">
+    <actuator name="fr3_joint7_motor">
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
-  <link name="panda_link0">
+  <link name="fr3_link0">
     <inertial>
       <mass value="2.92"/>
       <origin rpy="0 0 0" xyz="-0.025566 -2.88e-05 0.057332"/>
@@ -110,7 +110,7 @@
       </geometry>
     </collision>
   </link>
-  <link name="panda_link1">
+  <link name="fr3_link1">
     <inertial>
       <mass value="2.74"/>
       <origin rpy="0 0 0" xyz="0 -0.0324958 -0.0675818"/>
@@ -132,16 +132,16 @@
       </geometry>
     </collision>
   </link>
-  <joint name="panda_joint1" type="revolute">
+  <joint name="fr3_joint1" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973"/>
     <origin rpy="0 0 0" xyz="0 0 0.333"/>
-    <parent link="panda_link0"/>
-    <child link="panda_link1"/>
+    <parent link="fr3_link0"/>
+    <child link="fr3_link1"/>
     <axis xyz="0 0 1"/>
     <limit effort="87" lower="-2.8973" upper="2.8973" velocity="2.1750"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
-  <link name="panda_link2">
+  <link name="fr3_link2">
     <inertial>
       <mass value="2.74"/>
       <origin rpy="0 0 0" xyz="0 -0.06861 0.0322285"/>
@@ -163,16 +163,16 @@
       </geometry>
     </collision>
   </link>
-  <joint name="panda_joint2" type="revolute">
+  <joint name="fr3_joint2" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-1.7628" soft_upper_limit="1.7628"/>
     <origin rpy="-1.57079632679 0 0" xyz="0 0 0"/>
-    <parent link="panda_link1"/>
-    <child link="panda_link2"/>
+    <parent link="fr3_link1"/>
+    <child link="fr3_link2"/>
     <axis xyz="0 0 1"/>
     <limit effort="87" lower="-1.7628" upper="1.7628" velocity="2.1750"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
-  <link name="panda_link3">
+  <link name="fr3_link3">
     <inertial>
       <mass value="2.38"/>
       <origin rpy="0 0 0" xyz="0.0469893 0.0316374 -0.031704"/>
@@ -194,16 +194,16 @@
       </geometry>
     </collision>
   </link>
-  <joint name="panda_joint3" type="revolute">
+  <joint name="fr3_joint3" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973"/>
     <origin rpy="1.57079632679 0 0" xyz="0 -0.316 0"/>
-    <parent link="panda_link2"/>
-    <child link="panda_link3"/>
+    <parent link="fr3_link2"/>
+    <child link="fr3_link3"/>
     <axis xyz="0 0 1"/>
     <limit effort="87" lower="-2.8973" upper="2.8973" velocity="2.1750"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
-  <link name="panda_link4">
+  <link name="fr3_link4">
     <inertial>
       <mass value="2.38"/>
       <origin rpy="0 0 0" xyz="-0.0360446 0.0336853 0.031882"/>
@@ -225,18 +225,18 @@
       </geometry>
     </collision>
   </link>
-  <joint name="panda_joint4" type="revolute">
+  <joint name="fr3_joint4" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-3.0718" soft_upper_limit="0.0698"/>
     <!-- soft_upper_limitr should be -0.0698, but that brakes simulation when initial position for this joint is 0.0 -->
     <origin rpy="1.57079632679 0 0" xyz="0.0825 0 0"/>
-    <parent link="panda_link3"/>
-    <child link="panda_link4"/>
+    <parent link="fr3_link3"/>
+    <child link="fr3_link4"/>
     <axis xyz="0 0 1"/>
     <limit effort="87" lower="-3.0718" upper="0.0698" velocity="2.1750"/>
     <!-- upper should be -0.0698, but that brakes simulation when initial position for this joint is 0.0 -->
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
-  <link name="panda_link5">
+  <link name="fr3_link5">
     <inertial>
       <mass value="2.74"/>
       <origin rpy="0 0 0" xyz="0 0.0610427 -0.104176"/>
@@ -258,16 +258,16 @@
       </geometry>
     </collision>
   </link>
-  <joint name="panda_joint5" type="revolute">
+  <joint name="fr3_joint5" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973"/>
     <origin rpy="-1.57079632679 0 0" xyz="-0.0825 0.384 0"/>
-    <parent link="panda_link4"/>
-    <child link="panda_link5"/>
+    <parent link="fr3_link4"/>
+    <child link="fr3_link5"/>
     <axis xyz="0 0 1"/>
     <limit effort="12" lower="-2.8973" upper="2.8973" velocity="2.6100"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
-  <link name="panda_link6">
+  <link name="fr3_link6">
     <inertial>
       <mass value="1.55"/>
       <origin rpy="0 0 0" xyz="0.0510509 0.009108 0.0106343"/>
@@ -289,16 +289,16 @@
       </geometry>
     </collision>
   </link>
-  <joint name="panda_joint6" type="revolute">
+  <joint name="fr3_joint6" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-0.0175" soft_upper_limit="3.7525"/>
     <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
-    <parent link="panda_link5"/>
-    <child link="panda_link6"/>
+    <parent link="fr3_link5"/>
+    <child link="fr3_link6"/>
     <axis xyz="0 0 1"/>
     <limit effort="12" lower="-0.0175" upper="3.7525" velocity="2.6100"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
-  <link name="panda_link7">
+  <link name="fr3_link7">
     <inertial>
       <mass value="0.54"/>
       <origin rpy="0 0 0" xyz="0.0109695 0.0107965 0.0650411"/>
@@ -320,34 +320,34 @@
       </geometry>
     </collision>
   </link>
-  <joint name="panda_joint7" type="revolute">
+  <joint name="fr3_joint7" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973"/>
     <origin rpy="1.57079632679 0 0" xyz="0.088 0 0"/>
-    <parent link="panda_link6"/>
-    <child link="panda_link7"/>
+    <parent link="fr3_link6"/>
+    <child link="fr3_link7"/>
     <axis xyz="0 0 1"/>
     <limit effort="12" lower="-2.8973" upper="2.8973" velocity="2.6100"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
-  <link name="panda_link8">
+  <link name="fr3_link8">
     <inertial>
       <mass value="0.0"/>
       <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
       <inertia ixx="0.0" ixy="0.0" ixz="0" iyy="0.0" iyz="0.0" izz="0.0"/>
     </inertial>
   </link>
-  <joint name="panda_joint8" type="fixed">
+  <joint name="fr3_joint8" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0.107"/>
-    <parent link="panda_link7"/>
-    <child link="panda_link8"/>
+    <parent link="fr3_link7"/>
+    <child link="fr3_link8"/>
     <axis xyz="0 0 0"/>
   </joint>
-  <joint name="panda_hand_joint" type="fixed">
-    <parent link="panda_link8"/>
-    <child link="panda_hand"/>
+  <joint name="fr3_hand_joint" type="fixed">
+    <parent link="fr3_link8"/>
+    <child link="fr3_hand"/>
     <origin rpy="0 0 -0.785398163397" xyz="0 0 0"/>
   </joint>
-  <link name="panda_hand">
+  <link name="fr3_hand">
     <inertial>
       <mass value="0.73"/>
       <origin rpy="0 0 0" xyz="0 0.0015244 0.0275912"/>

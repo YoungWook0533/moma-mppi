@@ -38,7 +38,7 @@ class PandaControllerInterface : public mppi_ros::ControllerRos {
   geometry_msgs::PoseStamped get_pose_end_effector_ros(
       const mppi::observation_t& x);
   geometry_msgs::PoseStamped get_pose_base(const mppi::observation_t& x);
-  double get_stage_cost(const mppi::observation_t& x, const mppi::input_t& u,
+  double get_stage_cost(const mppi::observation_t& x, mppi::input_t& u,
                         const double t);
   bool init_reference_to_current_pose(const mppi::observation_t& x,
                                       const double t);

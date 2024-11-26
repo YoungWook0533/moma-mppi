@@ -47,9 +47,9 @@ int main(int argc, char** argv) {
       nh.advertise<geometry_msgs::PoseStamped>("/ee_desired_nominal", 10);
 
   sensor_msgs::JointState joint_state;
-  joint_state.name = {"panda_joint1", "panda_joint2", "panda_joint3",
-                      "panda_joint4", "panda_joint5", "panda_joint6",
-                      "panda_joint7"};
+  joint_state.name = {"fr3_joint1", "fr3_joint2", "fr3_joint3",
+                      "fr3_joint4", "fr3_joint5", "fr3_joint6",
+                      "fr3_joint7"};
   joint_state.position.resize(7);
   joint_state.header.frame_id = "world";
 

@@ -7,8 +7,8 @@ manipulation_controller:
   simulation: false
   fixed_base: $(arg fixed_base)
 
-  arm_id: panda
-  joint_names: [ "panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5", "panda_joint6", "panda_joint7" ]
+  arm_id: fr3
+  joint_names: [ "fr3_joint1", "fr3_joint2", "fr3_joint3", "fr3_joint4", "fr3_joint5", "fr3_joint6", "fr3_joint7" ]
   i_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]  # this is actually an integral gain
   d_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
   arm_I_max: 0.1
@@ -18,16 +18,16 @@ manipulation_controller:
   I_max: 0.0
   base_filter_alpha: 0.0
   
-  publish_rate: 10.0
+  publish_rate: 20.0
   coriolis_factor: 1.0
 
   state_topic: /observer/state
-  base_twist_topic: /robotnik_base_control/cmd_vel
+  base_twist_topic: /robot/robotnik_base_control/cmd_vel
 
   policy_update_rate: 0.0  # execute as fast as possible
   reference_update_rate: 10.0
   publish_ros: true
-  ros_publish_rate: 10.0
+  ros_publish_rate: 20.0
   static_optimization: false
 
   # cost stuff
@@ -84,8 +84,8 @@ manipulation_controller_sim:
 
   object_reference_position: 1.50   #  85 deg, slightly less than the limit (90 deg)
 
-  arm_id: panda
-  joint_names: [ "panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5", "panda_joint6", "panda_joint7" ]
+  arm_id: fr3
+  joint_names: [ "fr3_joint1", "fr3_joint2", "fr3_joint3", "fr3_joint4", "fr3_joint5", "fr3_joint6", "fr3_joint7" ]
   k_gains: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # this is actually an integral gain
   d_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
 
@@ -95,35 +95,35 @@ manipulation_controller_sim:
 
   base_filter_alpha: 0.0
 
-  publish_rate: 10.0
+  publish_rate: 20.0
   coriolis_factor: 1.0
 
   state_topic: /observer/state
-  base_twist_topic: /robotnik_base_control/cmd_vel
+  base_twist_topic: /robot/robotnik_base_control/cmd_vel
 
   policy_update_rate: 0.0  # execute as fast as possible
   reference_update_rate: 10.0
   publish_ros: true
-  ros_publish_rate: 10.0
+  ros_publish_rate: 20.0
   static_optimization: false
 
 panda_position_controller:
   type: velocity_controllers/JointGroupVelocityController
   joints:
-    - panda_joint1
-    - panda_joint2
-    - panda_joint3
-    - panda_joint4
-    - panda_joint5
-    - panda_joint6
-    - panda_joint7
+    - fr3_joint1
+    - fr3_joint2
+    - fr3_joint3
+    - fr3_joint4
+    - fr3_joint5
+    - fr3_joint6
+    - fr3_joint7
   constraints:
     goal_time: 10.0
   gains:
-    panda_joint1: { p: 12000, d: 50, i: 0.0, i_clamp: 10000 }
-    panda_joint2: { p: 30000, d: 100, i: 0.02, i_clamp: 10000 }
-    panda_joint3: { p: 18000, d: 50, i: 0.01, i_clamp: 1 }
-    panda_joint4: { p: 18000, d: 70, i: 0.01, i_clamp: 10000 }
-    panda_joint5: { p: 12000, d: 70, i: 0.01, i_clamp: 1 }
-    panda_joint6: { p: 7000, d: 50, i: 0.01, i_clamp: 1 }
-    panda_joint7: { p: 2000, d: 20, i: 0.0, i_clamp: 1 }
+    fr3_joint1: { p: 12000, d: 50, i: 0.0, i_clamp: 10000 }
+    fr3_joint2: { p: 30000, d: 100, i: 0.02, i_clamp: 10000 }
+    fr3_joint3: { p: 18000, d: 50, i: 0.01, i_clamp: 1 }
+    fr3_joint4: { p: 18000, d: 70, i: 0.01, i_clamp: 10000 }
+    fr3_joint5: { p: 12000, d: 70, i: 0.01, i_clamp: 1 }
+    fr3_joint6: { p: 7000, d: 50, i: 0.01, i_clamp: 1 }
+    fr3_joint7: { p: 2000, d: 20, i: 0.0, i_clamp: 1 }

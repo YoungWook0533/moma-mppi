@@ -145,13 +145,13 @@ bool StateObserver::initialize() {
   }
 
   KDL::Chain robot_chain;
-  if (!robot_kinematics.getChain("base_link", "reference_link", robot_chain)) {
-    ROS_ERROR("Failed to extract chain from base_link to reference_link");
+  if (!robot_kinematics.getChain("robot_base_link", "reference_link", robot_chain)) {
+    ROS_ERROR("Failed to extract chain from robot_base_link to reference_link");
     return false;
   }
 
-  if (!robot_kinematics.getChain("world", "panda_hand", world_to_ee_chain_)) {
-    ROS_ERROR("Failed to extract chain from world to panda_hand");
+  if (!robot_kinematics.getChain("world", "fr3_hand", world_to_ee_chain_)) {
+    ROS_ERROR("Failed to extract chain from world to fr3_hand");
     return false;
   }
   kdl_joints_.resize(world_to_ee_chain_.getNrOfJoints());

@@ -65,7 +65,7 @@ mppi_pinocchio::Pose PandaMobileCost::get_current_pose(
 }
 
 mppi::cost_t PandaMobileCost::compute_cost(const mppi::observation_t& x,
-                                           const mppi::input_t& u,
+                                           mppi::input_t& u,
                                            const mppi::reference_t& ref,
                                            const double t) {
   mppi::cost_t cost;

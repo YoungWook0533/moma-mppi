@@ -39,8 +39,8 @@ struct CostParams {
 
   // frames
   std::string handle_frame = "handle_link";
-  std::string tracked_frame = "panda_grasp";
-  std::string arm_base_frame = "panda_link0";
+  std::string tracked_frame = "fr3_hand_tcp";
+  std::string arm_base_frame = "fr3_link0";
   
   std::string collision_link_0;
   std::string collision_link_1;

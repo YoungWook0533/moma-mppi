@@ -23,7 +23,7 @@ void printSSV(const SSV& ssv, const std::string& name) {
 // Fetch a transform from TF2 and convert it to Eigen::Vector3d
 Eigen::Vector3d getLinkPosition(const tf2_ros::Buffer& tf_buffer, const std::string& link_name) {
     try {
-        geometry_msgs::TransformStamped transformStamped = tf_buffer.lookupTransform("base_link", link_name, ros::Time(0));
+        geometry_msgs::TransformStamped transformStamped = tf_buffer.lookupTransform("robot_base_link", link_name, ros::Time(0));
         return tf2::transformToEigen(transformStamped.transform).translation();
     } catch (tf2::TransformException& ex) {
         ROS_WARN("%s", ex.what());
@@ -110,7 +110,7 @@ void createSSVs(std::vector<SSV>& ssvs, const tf2_ros::Buffer& tf_buffer) {
     SSV AB, CD1, CD2;
 
     // Segment AB (base link points A and B)
-    Eigen::Vector3d base_pos = getLinkPosition(tf_buffer, "base_link");
+    Eigen::Vector3d base_pos = getLinkPosition(tf_buffer, "robot_base_link");
     AB.point1 = base_pos + Eigen::Vector3d(0.2776, 0, 0.2405);
     AB.point2 = base_pos + Eigen::Vector3d(-0.2776, 0, 0.2405);
     AB.radius = 0.3;  // Adjusted radius as requested
@@ -132,26 +132,26 @@ void createSSVs(std::vector<SSV>& ssvs, const tf2_ros::Buffer& tf_buffer) {
     SSV EF, FG, GH, I;
 
     // Use TF to get the transforms from the manipulator links
-    Eigen::Vector3d panda_link0 = getLinkPosition(tf_buffer, "panda_link0");
-    Eigen::Vector3d panda_link2 = getLinkPosition(tf_buffer, "panda_link2");
+    Eigen::Vector3d fr3_link0 = getLinkPosition(tf_buffer, "fr3_link0");
+    Eigen::Vector3d fr3_link2 = getLinkPosition(tf_buffer, "fr3_link2");
 
-    EF.point1 = panda_link0;
-    EF.point2 = panda_link2;
+    EF.point1 = fr3_link0;
+    EF.point2 = fr3_link2;
     EF.radius = 0.07;
     ssvs.push_back(EF);
 
-    FG.point1 = panda_link2;
-    FG.point2 = getLinkPosition(tf_buffer, "panda_link3");
+    FG.point1 = fr3_link2;
+    FG.point2 = getLinkPosition(tf_buffer, "fr3_link3");
     FG.radius = 0.07;
     ssvs.push_back(FG);
 
-    GH.point1 = getLinkPosition(tf_buffer, "panda_link_4_1");
-    GH.point2 = Eigen::Vector3d(0, 0.025, 0) + getLinkPosition(tf_buffer, "panda_link5");
+    GH.point1 = getLinkPosition(tf_buffer, "fr3_link4");
+    GH.point2 = Eigen::Vector3d(0, 0.025, 0) + getLinkPosition(tf_buffer, "fr3_link5");
     GH.radius = 0.09;
     ssvs.push_back(GH);
 
-    I.point1 = getLinkPosition(tf_buffer, "panda_link7");
-    I.point2 = getLinkPosition(tf_buffer, "panda_link8");
+    I.point1 = getLinkPosition(tf_buffer, "fr3_link7");
+    I.point2 = getLinkPosition(tf_buffer, "fr3_link8");
     I.radius = 0.1;
     ssvs.push_back(I);
 }
@@ -281,14 +281,14 @@ int main(int argc, char** argv) {
         ssvs.clear();
 
         // Delete previously published markers
-        deleteSSVMarkers(marker_pub, 0, num_markers, "base_link");
+        deleteSSVMarkers(marker_pub, 0, num_markers, "robot_base_link");
 
         createSSVs(ssvs, tf_buffer);
 
         // Print the SSVs and publish the markers
         num_markers = ssvs.size();  // Update the number of markers
         for (size_t i = 0; i < ssvs.size(); ++i) {
-            publishSSVMarker(marker_pub, i, ssvs[i].point1, ssvs[i].point2, ssvs[i].radius, "base_link");
+            publishSSVMarker(marker_pub, i, ssvs[i].point1, ssvs[i].point2, ssvs[i].radius, "robot_base_link");
         }
 
         // Find and log the closest SSVs

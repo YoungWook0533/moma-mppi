@@ -9,10 +9,10 @@
 
     <!--    Add utility grasp frame-->
     <xacro:if value="${add_finger}">
-        <link name="panda_grasp"/>
-        <joint name="panda_grasp_joint" type="fixed">
-            <parent link="panda_hand"/>
-            <child link="panda_grasp"/>
+        <link name="fr3_grasp"/>
+        <joint name="fr3_grasp_joint" type="fixed">
+            <parent link="fr3_hand"/>
+            <child link="fr3_grasp"/>
             <axis xyz="0 1 0"/>
             <origin xyz="0 0 0.1" rpy="0 0 0"/>
         </joint>

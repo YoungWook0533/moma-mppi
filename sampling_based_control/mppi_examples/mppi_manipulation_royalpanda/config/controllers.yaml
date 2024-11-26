@@ -1,6 +1,6 @@
 joint_publisher:
   type: "joint_state_controller/JointStateController"
-  publish_rate: 50
+  publish_rate: 100
 
 manipulation_controller:
   simulation: true
@@ -13,7 +13,7 @@ manipulation_controller:
   policy_update_rate: 0.0  # execute as fast as possible
   reference_update_rate: 10.0
   publish_ros: true
-  ros_publish_rate: 10.0
+  ros_publish_rate: 100.0
 
   static_optimization: false
 
@@ -21,8 +21,8 @@ manipulation_controller:
   log_file_path: $(find mppi_manipulation_royalpanda)/logs/$(arg experiment_name).silo
   
   fixed_base: false
-  arm_id: panda
-  joint_names: [ panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7 ]
+  arm_id: fr3
+  joint_names: [ fr3_joint1, fr3_joint2, fr3_joint3, fr3_joint4, fr3_joint5, fr3_joint6, fr3_joint7 ]
   base_joint_names: [world_x, world_y, theta]
 
   state_topic: /observer/state
@@ -80,11 +80,11 @@ manipulation_controller:
     power_weight: 10.0
   
     handle_frame: handle_link
-    tracked_frame: panda_grasp
-    arm_base_frame: panda_link0
+    tracked_frame: fr3_hand_tcp
+    arm_base_frame: fr3_link0
 
-    collision_link_0: panda_link1
-    collision_link_1: panda_link7
+    collision_link_0: fr3_link1
+    collision_link_1: fr3_link7
 
     collision_threshold: 0.35
     collision_weight: 1000
@@ -116,7 +116,7 @@ manipulation_controller:
     object_handle_joint: handle_joint
     articulation_joint: articulation_joint
 
-    initial_state: [ 0.0, 0.0, 0.0, 0.0, -0.52, 0.0, -1.785, 0.0, 1.10, 0.69, 0.04, 0.04,    # robot position
+    initial_state: [ 0.0, 0.0, 0.0, -0.05925593266179649, -0.9223217029137413, 0.012592808440404684, -2.183727073812039, -0.03402632339571556, 1.298460043116138, 0.7386671485088371, 0.04, 0.04,    # robot position
                      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,             # robot velocity
                      0.0,                                                                    # object joint position
                      0.0,                                                                    # object joint velocity
@@ -142,24 +142,24 @@ manipulation_controller:
 
 panda_position_controller:
   type: effort_controllers/JointGroupPositionController
-  joints: ["panda_joint1",
-           "panda_joint2",
-           "panda_joint3",
-           "panda_joint4",
-           "panda_joint5",
-           "panda_joint6",
-           "panda_joint7"]
-  panda_joint1:
+  joints: ["fr3_joint1",
+           "fr3_joint2",
+           "fr3_joint3",
+           "fr3_joint4",
+           "fr3_joint5",
+           "fr3_joint6",
+           "fr3_joint7"]
+  fr3_joint1:
     pid: { p: 120, d: 5, i: 0.0, i_clamp: 10000 }
-  panda_joint2:
+  fr3_joint2:
     pid: { p: 300, d: 10, i: 0.02, i_clamp: 10000 }
-  panda_joint3:
+  fr3_joint3:
     pid: { p: 180, d: 5, i: 0.01, i_clamp: 1 }
-  panda_joint4:
+  fr3_joint4:
     pid: { p: 180, d: 7, i: 0.01, i_clamp: 10000 }
-  panda_joint5:
+  fr3_joint5:
     pid: { p: 120, d: 7, i: 0.01, i_clamp: 1 }
-  panda_joint6:
+  fr3_joint6:
     pid: { p: 70, d: 5, i: 0.01, i_clamp: 1 }
-  panda_joint7:
+  fr3_joint7:
     pid: { p: 20, d: 2, i: 0.0, i_clamp: 1 }

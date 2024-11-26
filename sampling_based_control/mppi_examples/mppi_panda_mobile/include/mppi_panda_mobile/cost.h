@@ -31,7 +31,7 @@ class PandaMobileCost : public mppi::Cost {
 
   std::string robot_description_;
   mppi_pinocchio::RobotModel robot_model_;
-  std::string tracked_frame_ = "panda_hand";
+  std::string tracked_frame_ = "fr3_hand";
 
   Eigen::Matrix<double, 3, 3> Q_linear_;
   Eigen::Matrix<double, 3, 3> Q_angular_;
@@ -52,7 +52,7 @@ class PandaMobileCost : public mppi::Cost {
   void set_obstacle_radius(const double r);
   mppi_pinocchio::Pose get_current_pose(const Eigen::VectorXd& x);
   mppi::cost_t compute_cost(const mppi::observation_t& x,
-                            const mppi::input_t& u,
+                            mppi::input_t& u,
                             const mppi::reference_t& ref,
                             const double t) override;
 };

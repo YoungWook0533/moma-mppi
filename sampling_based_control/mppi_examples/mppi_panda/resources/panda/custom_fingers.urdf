@@ -2,7 +2,7 @@
 <robot name="panda" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
 <xacro:macro name="custom_fingers">
-    <link name="panda_leftfinger">
+    <link name="fr3_leftfinger">
         <inertial>
             <mass value="0.01"/>
             <origin rpy="0 0 0" xyz="0 0.0145644 0.0227941"/>
@@ -92,7 +92,7 @@
         </collision>    -->  
     </link>
 
-    <link name="panda_rightfinger">
+    <link name="fr3_rightfinger">
         <inertial>
             <mass value="0.01"/>
             <origin rpy="0 0 0" xyz="0 0.0145644 0.0227941"/>

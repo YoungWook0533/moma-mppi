@@ -17,7 +17,7 @@
     <rosparam command="load" file="$(find mppi_manipulation_royalpanda)/config/controllers_robot.yaml" subst_value="true"/>
 
     <!-- Gripper state controller -->
-    <arg name="joint_names" default="[panda_finger_joint1, panda_finger_joint2]" />
+    <arg name="joint_names" default="[fr3_finger_joint1, fr3_finger_joint2]" />
     <node name="franka_gripper" pkg="franka_gripper" type="franka_gripper_node" output="screen">
       <param name="robot_ip" value="$(arg robot_ip)"/>
       <param name="stop_at_shutdown" value="false" />

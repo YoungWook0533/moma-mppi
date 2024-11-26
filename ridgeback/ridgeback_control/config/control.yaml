@@ -74,9 +74,9 @@ manipulation_controller:
   simulation: false
   fixed_base: $(arg fixed_base)
 
-  arm_id: panda
-  joint_names: [ "panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5", "panda_joint6", "panda_joint7" ]
-  i_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]  # this is actually an integral gain
+  arm_id: fr3
+  joint_names: [ "fr3_joint1", "fr3_joint2", "fr3_joint3", "fr3_joint4", "fr3_joint5", "fr3_joint6", "fr3_joint7" ]
+  i_gains: [10.0, 10.s0, 10.0, 10.0, 10.0, 10.0, 10.0]  # this is actually an integral gain
   d_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
   arm_I_max: 0.1
 
@@ -151,8 +151,8 @@ manipulation_controller_sim:
 
   object_reference_position: 1.50   #  85 deg, slightly less than the limit (90 deg)
 
-  arm_id: panda
-  joint_names: [ "panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5", "panda_joint6", "panda_joint7" ]
+  arm_id: fr3
+  joint_names: [ "fr3_joint1", "fr3_joint2", "fr3_joint3", "fr3_joint4", "fr3_joint5", "fr3_joint6", "fr3_joint7" ]
   k_gains: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # this is actually an integral gain
   d_gains: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
 
@@ -177,29 +177,29 @@ manipulation_controller_sim:
 panda_position_controller:
   type: effort_controllers/JointTrajectoryController
   joints:
-    - panda_joint1
-    - panda_joint2
-    - panda_joint3
-    - panda_joint4
-    - panda_joint5
-    - panda_joint6
-    - panda_joint7
+    - fr3_joint1
+    - fr3_joint2
+    - fr3_joint3
+    - fr3_joint4
+    - fr3_joint5
+    - fr3_joint6
+    - fr3_joint7
   constraints:
     goal_time: 10.0
   gains:
-    panda_joint1:
+    fr3_joint1:
       pid: { p: 12000, d: 50, i: 0.0, i_clamp: 10000 }
-    panda_joint2:
+    fr3_joint2:
       pid: { p: 30000, d: 100, i: 0.02, i_clamp: 10000 }
-    panda_joint3:
+    fr3_joint3:
       pid: { p: 18000, d: 50, i: 0.01, i_clamp: 1 }
-    panda_joint4:
+    fr3_joint4:
       pid: { p: 18000, d: 70, i: 0.01, i_clamp: 10000 }
-    panda_joint5:
+    fr3_joint5:
       pid: { p: 12000, d: 70, i: 0.01, i_clamp: 1 }
-    panda_joint6:
+    fr3_joint6:
       pid: { p: 7000, d: 50, i: 0.01, i_clamp: 1 }
-    panda_joint7:
+    fr3_joint7:
       pid: { p: 2000, d: 20, i: 0.0, i_clamp: 1 }
       
 joint_pan_position_controller:

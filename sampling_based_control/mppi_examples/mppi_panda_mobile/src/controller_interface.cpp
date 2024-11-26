@@ -186,7 +186,7 @@ bool PandaMobileControllerInterface::update_reference() {
 mppi_pinocchio::Pose PandaMobileControllerInterface::get_pose_end_effector(
     const Eigen::VectorXd& x) {
   robot_model_.update_state(x);
-  return robot_model_.get_pose("panda_hand");
+  return robot_model_.get_pose("fr3_hand");
 }
 
 geometry_msgs::PoseStamped

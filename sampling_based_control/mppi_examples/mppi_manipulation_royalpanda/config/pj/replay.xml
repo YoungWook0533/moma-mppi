@@ -248,14 +248,14 @@
        <plot style="Lines" mode="TimeSeries">
         <range left="0.000000" top="0.100000" bottom="-0.100000" right="1.490000"/>
         <limitY/>
-        <curve color="#17becf" name="/joint_states/panda_joint1/effort"/>
+        <curve color="#17becf" name="/joint_states/fr3_joint1/effort"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
         <range left="0.000000" top="0.100000" bottom="-0.100000" right="1.490000"/>
         <limitY/>
-        <curve color="#bcbd22" name="/joint_states/panda_joint2/effort"/>
+        <curve color="#bcbd22" name="/joint_states/fr3_joint2/effort"/>
        </plot>
       </DockArea>
      </DockSplitter>
@@ -264,35 +264,35 @@
        <plot style="Lines" mode="TimeSeries">
         <range left="0.000000" top="0.100000" bottom="-0.100000" right="1.490000"/>
         <limitY/>
-        <curve color="#1f77b4" name="/joint_states/panda_joint3/effort"/>
+        <curve color="#1f77b4" name="/joint_states/fr3_joint3/effort"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
         <range left="0.000000" top="0.100000" bottom="-0.100000" right="1.490000"/>
         <limitY/>
-        <curve color="#d62728" name="/joint_states/panda_joint4/effort"/>
+        <curve color="#d62728" name="/joint_states/fr3_joint4/effort"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
         <range left="0.000000" top="0.100000" bottom="-0.100000" right="1.490000"/>
         <limitY/>
-        <curve color="#1ac938" name="/joint_states/panda_joint5/effort"/>
+        <curve color="#1ac938" name="/joint_states/fr3_joint5/effort"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
         <range left="0.000000" top="0.100000" bottom="-0.100000" right="1.490000"/>
         <limitY/>
-        <curve color="#ff7f0e" name="/joint_states/panda_joint6/effort"/>
+        <curve color="#ff7f0e" name="/joint_states/fr3_joint6/effort"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
         <range left="0.000000" top="0.100000" bottom="-0.100000" right="1.490000"/>
         <limitY/>
-        <curve color="#f14cc1" name="/joint_states/panda_joint7/effort"/>
+        <curve color="#f14cc1" name="/joint_states/fr3_joint7/effort"/>
        </plot>
       </DockArea>
      </DockSplitter>

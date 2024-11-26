@@ -19,12 +19,12 @@ class RobotWrapperTestCase(unittest.TestCase):
         self.assertEqual(neutral.shape, self.wrapped.get_random_configuration().shape)
 
     def test_jacobian(self):
-        J = self.wrapped.get_frame_jacobian('panda_link8')
+        J = self.wrapped.get_frame_jacobian('fr3_link8')
         self.assertEqual(J.shape[0], 6)
         self.assertEqual(J.shape[1], 9)
         self.assertGreater(np.abs(J.sum()), 0.5)
         self.wrapped.update_state(np.ones(9) * 0.25, np.zeros(9))
-        J2 = self.wrapped.get_frame_jacobian('panda_link8')
+        J2 = self.wrapped.get_frame_jacobian('fr3_link8')
         self.assertGreater(np.abs(J - J2).sum(), 0.5)
         np.testing.assert_allclose(np.ones(9) * 0.25, self.wrapped.get_q())
         np.testing.assert_allclose(np.zeros(9), self.wrapped.get_v())

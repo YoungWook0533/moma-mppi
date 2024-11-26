@@ -29,7 +29,7 @@ class Cost {
    * @param time: stage time
    * @return the stage cost
    */
-  virtual cost_t get_stage_cost(const observation_t& x, const input_t& u,
+  virtual cost_t get_stage_cost(const observation_t& x, input_t& u,
                                 const double t = 0);
 
   /**
@@ -47,7 +47,7 @@ class Cost {
    * @param t current time
    * @return
    */
-  virtual cost_t compute_cost(const observation_t& x, const input_t& u,
+  virtual cost_t compute_cost(const observation_t& x, input_t& u,
                               const reference_t& ref, const double t) = 0;
 
   /**

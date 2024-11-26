@@ -11,7 +11,7 @@
 
   <arg name="odom_frame" default="$(arg prefix)odom"/>
   <arg name="base_frame" default="$(arg prefix)base_footprint"/>
-  <arg name="cmd_vel" default="$(optenv ROBOT_TWISTMUX_CMD_OUT robotnik_base_control/cmd_vel)"/>
+  <arg name="cmd_vel" default="$(optenv ROBOT_TWISTMUX_CMD_OUT robot/robotnik_base_control/cmd_vel)"/>
   <arg name="mobile_controller" default="$(optenv ROBOT_CONTROLLER robotnik_base_control)"/>
   <arg name="odom_broadcast_tf" default="true"/>
 

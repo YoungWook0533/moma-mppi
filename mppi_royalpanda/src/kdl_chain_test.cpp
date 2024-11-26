@@ -24,14 +24,14 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  // Extract the kinematic chain from world to panda_hand
+  // Extract the kinematic chain from world to fr3_hand
   KDL::Chain chain;
-  if (!tree.getChain("base_link", "panda_hand", chain)) {
-    ROS_ERROR("Failed to extract chain from base_link to panda_hand");
+  if (!tree.getChain("robot_base_link", "fr3_hand", chain)) {
+    ROS_ERROR("Failed to extract chain from robot_base_link to fr3_hand");
     return -1;
   }
 
-  ROS_INFO("Successfully extracted chain from world to panda_hand");
+  ROS_INFO("Successfully extracted chain from world to fr3_hand");
   ROS_INFO("Number of segments in the chain: %lu", chain.getNrOfSegments());
   ROS_INFO("Number of joints in the chain: %lu", chain.getNrOfJoints());
 

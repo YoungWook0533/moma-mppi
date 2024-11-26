@@ -40,6 +40,11 @@ Solver::Solver(dynamics_ptr dynamics, cost_ptr cost, policy_ptr policy,
   init_data();
   init_threading();
 
+  u_min_ = Eigen::VectorXd::Constant(dynamics_->get_input_dimension(), -1.0);
+  u_max_ = Eigen::VectorXd::Constant(dynamics_->get_input_dimension(), 1.0);
+  u_min_ << -0.1, -0.1, -0.3, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5;
+  u_max_ <<  0.1,  0.1,  0.3,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5;
+
   if (config_.display_update_freq) {
     start_time_ = std::chrono::high_resolution_clock::now();
   }
@@ -110,6 +115,7 @@ void Solver::update_policy() {
 
       stage_cost_ =
           cost_->get_stage_cost(x0_internal_, opt_roll_.uu[0], t0_internal_);
+      // ROS_WARN("Cost :    %f", stage_cost_);
     }
     swap_policies();
     auto end = std::chrono::steady_clock::now();
@@ -165,6 +171,7 @@ void Solver::initialize_rollouts() {
             dynamics_->get_zero_input(x0_internal_));
 
   std::shared_lock<std::shared_mutex> lock(rollout_cache_mutex_);
+  opt_roll_cache_.clear();
   std::fill(opt_roll_cache_.xx.begin(), opt_roll_cache_.xx.end(), x0_internal_);
   std::fill(opt_roll_cache_.uu.begin(), opt_roll_cache_.uu.end(),
             dynamics_->get_zero_input(x0_internal_));
@@ -219,6 +226,15 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
       rollouts_[k].tt[t] = ts;
       rollouts_[k].uu[t] = policy_->sample(ts, k);
 
+      // Clamp control inputs
+      rollouts_[k].uu[t] = rollouts_[k].uu[t].cwiseMax(u_min_).cwiseMin(u_max_);
+
+      if ((rollouts_[k].uu[t].array() > u_max_.array()).any() ||
+          (rollouts_[k].uu[t].array() < u_min_.array()).any()) {
+        ROS_WARN_STREAM("Control input out of bounds after clamping at step " << t
+                       << ": " << rollouts_[k].uu[t].transpose());
+      }
+
       // compute input-state stage cost
       double cost_temp;
       cost_temp = std::pow(config_.discount_factor, t) *
@@ -246,11 +262,12 @@ void Solver::sample_trajectories_batch(dynamics_ptr& dynamics, cost_ptr& cost,
       rollouts_[k].cc(t) = cost_temp;
       rollouts_[k].total_cost += cost_temp;
 
-      // integrate dynamics    auto start = std::chrono::steady_clock::now();
+      // integrate dynamics
       x = dynamics->step(rollouts_[k].uu[t], config_.step_size);
     }
   }
 }
+
 
 void Solver::sample_trajectories() {
   policy_->shift(t0_internal_);
@@ -271,6 +288,10 @@ void Solver::sample_trajectories() {
 
     for (size_t i = 0; i < config_.threads; i++) futures_[i].get();
   }
+  // for (int t = 0; t < steps_; ++t) {
+  //   ROS_INFO_STREAM("Nominal control input at step " << t << ": " << opt_roll_.uu[t].transpose());
+  // }
+
 }
 
 void Solver::compute_weights() {
@@ -299,6 +320,10 @@ void Solver::compute_weights() {
   }
   std::transform(weights_.begin(), weights_.end(), weights_.begin(),
                  [&sum](double v) -> double { return v / sum; });
+
+  // for (size_t k = 0; k < weights_.size(); ++k) {
+  //     ROS_WARN_STREAM("Abnormal weight detected at rollout " << k << ": " << weights_[k]);
+  // }
 }
 
 void Solver::optimize() {
@@ -312,38 +337,54 @@ void Solver::optimize() {
   for (int t = 0; t < steps_; t++) {
     opt_roll_.tt[t] = t0_internal_ + t * config_.step_size;
     opt_roll_.uu[t] = policy_->nominal(t0_internal_ + t * config_.step_size);
+    // ROS_WARN_STREAM("t0_internal_" << std::fixed << std::setprecision(6) << t0_internal_);
+    // ROS_WARN_STREAM("opt_roll_.uu[t]" << opt_roll_.uu[t]);
   }
+  // for (size_t k = 0; k < config_.rollouts; k++) {
+  //   for (int t = 0; t < steps_; t++) {
+  //     ROS_WARN_STREAM("Step " << t << ": " << rollouts_[k].uu[t].transpose());
+  //   }
+  // }
 
 }
 
 void Solver::filter_input() {
-  // only if filter is available reset to the initial opt time
   if (filter_) {
     filter_->reset(x0_internal_, t0_internal_);
   }
 
-  // reset the dynamics such that we rollout the dynamics again
-  // with the input we filter step after step (sequentially)
   dynamics_->reset(x0_internal_, t0_internal_);
   opt_roll_.xx[0] = x0_internal_;
 
-  // sequential filtering otherwise just nominal rollout
   for (int t = 0; t < steps_ - 1; t++) {
     if (filter_) {
       filter_->apply(opt_roll_.xx[t], opt_roll_.uu[t], opt_roll_.tt[t]);
-      nominal_.row(t) = opt_roll_.uu[t].transpose();
     }
+
+    // Clamp control inputs
+    opt_roll_.uu[t] = opt_roll_.uu[t].cwiseMax(u_min_).cwiseMin(u_max_);
+
     opt_roll_.xx[t + 1] = dynamics_->step(opt_roll_.uu[t], config_.step_size);
   }
 
-  // filter the last input in the sequence (if filter is available)
   if (filter_) {
     filter_->apply(opt_roll_.xx.back(), opt_roll_.uu.back(),
                    opt_roll_.tt.back());
-    nominal_.bottomRows(1) = opt_roll_.uu.back().transpose();
-    policy_->set_nominal(nominal_);
   }
+
+  opt_roll_.uu.back() = opt_roll_.uu.back().cwiseMax(u_min_).cwiseMin(u_max_);
+
+  // Resize nominal_ matrix to match the size of opt_roll_.uu
+  nominal_.resize(opt_roll_.uu.size(), opt_roll_.uu[0].size());
+  
+  // Assign opt_roll_.uu to nominal_ row by row
+  for (size_t i = 0; i < opt_roll_.uu.size(); ++i) {
+    nominal_.row(i) = opt_roll_.uu[i].transpose();
+  }
+
+  policy_->set_nominal(nominal_);
 }
+
 
 void Solver::get_input(const observation_t& x, input_t& u, const double t) {
   static double coeff;
