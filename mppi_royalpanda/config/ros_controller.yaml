@@ -18,7 +18,7 @@ manipulation_controller:
   I_max: 0.0
   base_filter_alpha: 0.0
   
-  publish_rate: 20.0
+  publish_rate: 10.0
   coriolis_factor: 1.0
 
   state_topic: /observer/state
@@ -27,7 +27,7 @@ manipulation_controller:
   policy_update_rate: 0.0  # execute as fast as possible
   reference_update_rate: 10.0
   publish_ros: true
-  ros_publish_rate: 20.0
+  ros_publish_rate: 10.0
   static_optimization: false
 
   # cost stuff
@@ -95,7 +95,7 @@ manipulation_controller_sim:
 
   base_filter_alpha: 0.0
 
-  publish_rate: 20.0
+  publish_rate: 10.0
   coriolis_factor: 1.0
 
   state_topic: /observer/state
@@ -104,7 +104,7 @@ manipulation_controller_sim:
   policy_update_rate: 0.0  # execute as fast as possible
   reference_update_rate: 10.0
   publish_ros: true
-  ros_publish_rate: 20.0
+  ros_publish_rate: 10.0
   static_optimization: false
 
 panda_position_controller:

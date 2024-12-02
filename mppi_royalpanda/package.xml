@@ -31,6 +31,10 @@
   <depend>robot_control</depend>
 
   <depend>kdl_parser</depend>
+  <depend>control_toolbox</depend>
+  <depend>pinocchio</depend>
+  <depend>FCL</depend>
+  <depend>moveit_visual_tools</depend>
 
   <export>
     <controller_interface plugin="${prefix}/plugins.xml"/>

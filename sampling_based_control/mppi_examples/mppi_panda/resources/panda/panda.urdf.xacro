@@ -44,6 +44,7 @@
         <gazebo reference="fr3_link2"/>
         <gazebo reference="fr3_link3"/>
         <gazebo reference="fr3_link4"/>
+        <gazebo reference="fr3_link_4_1"/>
         <gazebo reference="fr3_link5"/>
         <gazebo reference="fr3_link6"/>
         <gazebo reference="fr3_link7"/>
@@ -297,6 +298,20 @@
                 <!-- upper should be -0.0698, but that brakes simulation when initial position for this joint is 0.0 -->
             </xacro:unless>
             <dynamics damping="${damping}" friction="${friction}"/>
+        </joint>
+        <link name="fr3_link_4_1">
+            <inertial>
+                <mass value="0.01"/>
+                <origin rpy="0 0 0" xyz="0 0 0"/>
+                <inertia ixx="0.00799663881132" ixy="0.00347095570217" ixz="-0.00241222942995" iyy="0.00825390705278"
+                         iyz="0.00235774044121" izz="0.0102515004345"/>
+            </inertial>
+        </link>
+        <joint name="fr3_joint_4_1" type="fixed">
+            <origin rpy="0 0 0" xyz="-0.0825 0 0"/>
+            <parent link="fr3_link4"/>
+            <child link="fr3_link_4_1"/>
+            <axis xyz="0 0 1"/>
         </joint>
         <link name="fr3_link5">
             <inertial>

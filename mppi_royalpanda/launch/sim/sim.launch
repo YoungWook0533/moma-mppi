@@ -20,7 +20,8 @@
     </include>
 
     <!-- <node name="controller_manager_gui" type="rqt_controller_manager" pkg="rqt_controller_manager" output="screen"/> -->
-    <!-- <node name="collision_detection_node" pkg="mppi_royalpanda" type="ssv_model"/> -->
+    <node name="collision_detection_node" pkg="mppi_royalpanda" type="ssv_fcl"/>
+    <node name="find_acting_point_node" pkg="mppi_royalpanda" type="find_acting_point"/>
     <node pkg="mppi_royalpanda" type="controller_node" name="manipulation_controller_sim" output="screen" />
     <node pkg="mppi_royalpanda" type="input_to_controller" name="input_to_controller_node" output="screen" />
 </launch>
