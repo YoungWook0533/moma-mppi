@@ -250,8 +250,8 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     double cost = 0;
     int mode = 0;
     double reach;
-    double base_regularization_weight = 1.0;  // Lower weight to encourage base movement
-    double arm_regularization_weight = 1.0;   // Higher weight to discourage arm movement
+    // double base_regularization_weight = 0.6;  // Lower weight to encourage base movement
+    // double arm_regularization_weight = 0.6;   // Higher weight to discourage arm movement
 
     robot_model_.update_state(x.head<BASE_ARM_GRIPPER_DIM>());
     object_model_.update_state(x.segment<1>(2 * BASE_ARM_GRIPPER_DIM));
@@ -268,8 +268,7 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
     robot_model_.get_error(params_.tracked_frame, ref_q, ref_t, error_);
 
     // Apply regularization with different weights for the base and arm segments
-    // cost += base_regularization_weight * x.segment<3>(0).norm() + 
-    //         arm_regularization_weight * x.segment<7>(3).norm();
+    cost += 0.5 * x.segment<10>(0).norm();
 
     if (dbb_distance_ > 0) {
         
@@ -324,8 +323,8 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
             // ROS_INFO("Target Angle: %f", target_angle);
             
             Eigen::Vector2d acting_point_velocity = Eigen::Vector2d::Zero();
-            acting_point_velocity.x() = -distance_to_origin;  // Linear velocity
-            acting_point_velocity.y() = target_angle;         // Angular velocity
+            acting_point_velocity.x() = -0.4 * distance_to_origin;  // Linear velocity
+            acting_point_velocity.y() = 0.4 * target_angle;         // Angular velocity
 
             // Extract base control input
             Eigen::Vector2d base_speed = Eigen::Vector2d::Zero();
