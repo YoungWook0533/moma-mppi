@@ -48,7 +48,7 @@ StateObserver::StateObserver(const ros::NodeHandle& nh)
   std::string wrench_topic;
   nh_.param<std::string>("wrench_topic", wrench_topic, "/wrench");
 
-  std::string odom_topic = "/Odometry"; // Using the /Odometry topic for both pose and twist
+  std::string odom_topic = "/robotnik_base_control/odom"; // Using the /Odometry topic for both pose and twist
 
   ROS_INFO_STREAM(
       "Subscribing arm state to: " << arm_state_topic << std::endl

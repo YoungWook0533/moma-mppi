@@ -161,14 +161,23 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh;
 
     // Publishers for the base and arm controllers
-    ros::Publisher base_cmd_pub = nh.advertise<geometry_msgs::Twist>("/robotnik_base_control/cmd_vel1", 1);
+    ros::Publisher base_cmd_pub = nh.advertise<geometry_msgs::Twist>("/robotnik_base_control/cmd_vel", 1);
     ros::Publisher arm_cmd_pub = nh.advertise<std_msgs::Float64MultiArray>("/panda_position_controller/command", 1);
 
-    // Create variables to store the previous arm commands
+    // Create variables to store the previous commands for the base and arm
+    geometry_msgs::Twist previous_base_cmd;
+    previous_base_cmd.linear.x = 0.0;
+    previous_base_cmd.linear.y = 0.0;
+    previous_base_cmd.angular.z = 0.0;
+
     std_msgs::Float64MultiArray previous_arm_cmd;
     previous_arm_cmd.data.resize(7, 0.0);  // Initialize to zeros
 
-    // Create variable to store the flag indicating whether a new command has been received
+    // Smoothing factors for exponential smoothing
+    const double base_alpha = 1.0;  // Smoothing factor for base commands
+    const double joint_alpha = 1.0; // Smoothing factor for joint velocities
+
+    // Flag indicating whether a new command has been received
     bool new_command_received = false;
 
     // Subscriber callback for /input topic
@@ -183,23 +192,41 @@ int main(int argc, char** argv) {
         base_cmd.linear.x = msg->data[0];
         base_cmd.linear.y = msg->data[1];
         base_cmd.angular.z = msg->data[2];
-        base_cmd_pub.publish(base_cmd);  // Publish the base twist
 
-        // Extract the joint positions (next 7 elements for the manipulator)
+        // Apply exponential smoothing to base commands
+        base_cmd.linear.x = base_alpha * base_cmd.linear.x + (1 - base_alpha) * previous_base_cmd.linear.x;
+        base_cmd.linear.y = base_alpha * base_cmd.linear.y + (1 - base_alpha) * previous_base_cmd.linear.y;
+        base_cmd.angular.z = base_alpha * base_cmd.angular.z + (1 - base_alpha) * previous_base_cmd.angular.z;
+
+        // Publish the smoothed base command
+        base_cmd_pub.publish(base_cmd);
+
+        // Update the previous base command with the newly calculated command
+        previous_base_cmd = base_cmd;
+
+        // Extract the joint velocities (next 7 elements for the manipulator)
         std_msgs::Float64MultiArray arm_cmd;
         arm_cmd.data.resize(7);
         for (int i = 0; i < 7; ++i) {
-            arm_cmd.data[i] = msg->data[3 + i];  // Populate the joint positions
+            arm_cmd.data[i] = msg->data[3 + i];  // Populate the joint velocities
         }
 
-        // Update the previous command with the newly calculated command
+        // Apply exponential smoothing to arm joint velocities
+        for (int i = 0; i < 7; ++i) {
+            arm_cmd.data[i] = joint_alpha * arm_cmd.data[i] + (1 - joint_alpha) * previous_arm_cmd.data[i];
+        }
+
+        // Publish the smoothed arm command
+        arm_cmd_pub.publish(arm_cmd);
+
+        // Update the previous arm command with the newly calculated command
         previous_arm_cmd = arm_cmd;
 
         // Mark that a new command has been received
         new_command_received = true;
     };
 
-    // Subscribe to /input
+    // Subscribe to /input topic
     ros::Subscriber input_sub = nh.subscribe<std_msgs::Float32MultiArray>("/input", 1, input_cb);
 
     // Set the control loop rate to 1000Hz
@@ -208,10 +235,8 @@ int main(int argc, char** argv) {
     while (ros::ok()) {
         // If a new command has been received, publish the new command; otherwise, publish the previous command
         if (new_command_received) {
-            arm_cmd_pub.publish(previous_arm_cmd);  // Publish the updated arm command
-            new_command_received = false;  // Reset the flag for the next loop
-        } else {
-            arm_cmd_pub.publish(previous_arm_cmd);  // Publish the previous arm command
+            // Reset the flag for the next loop
+            new_command_received = false;
         }
 
         // Spin to handle callbacks

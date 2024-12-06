@@ -30,24 +30,10 @@ bool first_search = true;
 Eigen::Vector3f last_acting_point;
 double distance_;
 
-PandaCost::PandaCost(const CostParams& params) : params_(params), calculated_velocity_(), dbb_distance_(std::numeric_limits<float>::max()), acting_point_(Eigen::Vector3f::Zero()) {
+PandaCost::PandaCost(const CostParams& params) : params_(params), dbb_distance_(std::numeric_limits<float>::max()), acting_point_(Eigen::Vector3f::Zero()) {
   robot_model_.init_from_xml(params_.robot_description);
   object_model_.init_from_xml(params_.object_description);
 
-//   static bool dbb_loaded = false;
-
-//   if (!dbb_loaded) {
-//       // Load and sort DBB points from .txt file
-//       std::string package_path = ros::package::getPath("mppi_royalpanda");
-//       std::string txt_file_path = package_path + "/mesh/DBB.txt";
-//       static_dbb_points = loadAndSortDBBPoints(txt_file_path);
-//       if (static_dbb_points.empty()) {
-//           ROS_ERROR("Failed to load DBB points from .txt file");
-//       }
-//       dbb_loaded = true;
-//   }
-
-//   dbb_points_ = static_dbb_points;
   dbb_distance_sub_ = nh_.subscribe("/dbb_distance", 10, &PandaCost::dbbDistanceCallback, this);
   acting_point_sub_ = nh_.subscribe("/acting_point", 10, &PandaCost::actingPointCallback, this);
 }
@@ -122,127 +108,6 @@ double PandaCost::EEToDBB(const std::vector<std::shared_ptr<fcl::CollisionObject
     return distance;
 }
 
-// Find closest point on EE between base_link
-Eigen::Vector3f PandaCost::EEToBase(const std::vector<std::shared_ptr<fcl::CollisionObjectd>>& fcl_objects) {
-    fcl::DistanceRequestd request;
-    fcl::DistanceResultd result;
-    request.enable_nearest_points = true;
-    
-    distance_ = fcl::distance(fcl_objects[0].get(), fcl_objects[2].get(), request, result);
-
-    Eigen::Vector3f ee_point;
-    ee_point.x() = result.nearest_points[1][0];
-    ee_point.y() = result.nearest_points[1][1];
-    ee_point.z() = result.nearest_points[1][2];
-
-    return ee_point;
-}
-
-std::vector<std::tuple<Eigen::Vector3f, double>> PandaCost::loadAndSortDBBPoints(const std::string& filename) {
-    std::vector<std::tuple<Eigen::Vector3f, double>> points;
-    std::ifstream infile(filename);
-    float x, y, z, score;
-
-    if (!infile.is_open()) {
-        ROS_ERROR("Failed to open DBB file: %s", filename.c_str());
-        return points;
-    }
-
-    int point_count = 0;
-    while (infile >> x >> y >> z >> score) {
-        points.emplace_back(Eigen::Vector3f(x, y, z), score);
-        ++point_count;
-    }
-    infile.close();
-    ROS_INFO("Successfully loaded %d points from DBB file.", point_count);
-
-    // First, sort by z, then x, then y, in ascending order
-    std::sort(points.begin(), points.end(), [](const auto& p1, const auto& p2) {
-        const auto& p1_pos = std::get<0>(p1);
-        const auto& p2_pos = std::get<0>(p2);
-        if (p1_pos.z() != p2_pos.z()) return p1_pos.z() < p2_pos.z();
-        if (p1_pos.x() != p2_pos.x()) return p1_pos.x() < p2_pos.x();
-        return p1_pos.y() < p2_pos.y();
-    });
-
-    // Then, sort by score within each (z, x, y) group in descending order
-    auto it = points.begin();
-    while (it != points.end()) {
-        auto range_end = std::upper_bound(it, points.end(), *it, [](const auto& p1, const auto& p2) {
-            const auto& p1_pos = std::get<0>(p1);
-            const auto& p2_pos = std::get<0>(p2);
-            return p1_pos.z() < p2_pos.z() ||
-                   (p1_pos.z() == p2_pos.z() && p1_pos.x() < p2_pos.x()) ||
-                   (p1_pos.z() == p2_pos.z() && p1_pos.x() == p2_pos.x() && p1_pos.y() < p2_pos.y());
-        });
-        
-        // Sort within the group by score
-        std::sort(it, range_end, [](const auto& p1, const auto& p2) {
-            return std::get<1>(p1) > std::get<1>(p2);
-        });
-
-        it = range_end;
-    }
-
-    return points;
-}
-
-Eigen::Vector3f PandaCost::findActingPoint(const std::vector<std::tuple<Eigen::Vector3f, double>>& dbb_points, const Eigen::Vector3f& ee_position) {
-    Eigen::Vector3f closest_point;
-    double min_distance = std::numeric_limits<double>::max();
-
-    // Find the closest point to the clamped EE position
-    for (const auto& point : dbb_points) {
-        const Eigen::Vector3f& p = std::get<0>(point);
-        double distance_to_ee = (p - ee_position).norm();
-
-        if (distance_to_ee < min_distance) {
-            min_distance = distance_to_ee;
-            closest_point = p;
-        }
-    }
-
-    // Define x and y bounds based on the score-dependent alpha values
-    std::vector<std::tuple<Eigen::Vector3f, double>> candidates;
-    for (const auto& point : dbb_points) {
-        const Eigen::Vector3f& p = std::get<0>(point);
-        double score = std::get<1>(point);
-
-        double alpha_x = min_distance / std::abs(score / 300.0);
-        double alpha_y = min_distance / std::abs(score / 300.0);
-
-        // Only add points within the x and y bounds relative to closest_point to candidates
-        if (std::abs(p.x() - closest_point.x()) <= alpha_x && std::abs(p.y() - closest_point.y()) <= alpha_y) {
-            candidates.push_back(point);
-        }
-    }
-
-    // From the candidates, find the point with the highest score
-    double max_score = -std::numeric_limits<double>::max();
-    Eigen::Vector3f acting_point = closest_point;
-
-    for (const auto& candidate : candidates) {
-        const Eigen::Vector3f& p = std::get<0>(candidate);
-        double score = std::get<1>(candidate);
-
-        if (first_search) {
-            max_score = score;
-            acting_point = p;
-        }
-        // Update acting_point if the candidate has a higher score
-        if (score > max_score) {
-            max_score = score;
-            acting_point = p;
-        }
-    }
-
-    // ROS_INFO("Acting Point on DBB: [%f, %f, %f]", acting_point.x(), acting_point.y(), acting_point.z());
-    last_acting_point = acting_point;  // Update last acting point
-    first_search = false;              // Update flag after first search
-    return acting_point;
-}
-
-
 mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
                                      mppi::input_t& u,
                                      const mppi::reference_t& ref,
@@ -296,7 +161,6 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
                     params_.Q_reachs * (std::pow(reach - params_.min_dist, 2));
         }
     }
-    // ROS_WARN("base : %f, %f", u(0), u(2));
 
     // End-effector inside DBB
     if (dbb_distance_ <= 0) { 
@@ -305,12 +169,8 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
         // cost += base_regularization_weight * x.segment<3>(0).norm() + 
         //         arm_regularization_weight * x.segment<7>(3).norm();
 
-        cost += (error_.head<3>().transpose() * error_.head<3>()).norm() * 300 * params_.Qt;
-        cost += (error_.tail<3>().transpose() * error_.tail<3>()).norm() * 300 * params_.Qr;
-
-        // Find acting point among DBB
-        // Eigen::Vector3f ee_point = EEToBase(fcl_objects);
-        // Eigen::Vector3f acting_point = findActingPoint(dbb_points_, ee_point);
+        cost += (error_.head<3>().transpose() * error_.head<3>()).norm() * params_.Qt;
+        cost += (error_.tail<3>().transpose() * error_.tail<3>()).norm() * params_.Qr;
 
         if (acting_point_ != Eigen::Vector3f::Zero()) {
             double x = acting_point_.x();
@@ -319,9 +179,6 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
             // Calculate the desired velocity from the acting point
             double distance_to_origin = std::sqrt(x * x + y * y);
             double target_angle = std::atan2(y, x);
-
-            // ROS_INFO("Distance to Origin: %f", distance_to_origin);
-            // ROS_INFO("Target Angle: %f", target_angle);
             
             Eigen::Vector2d acting_point_velocity = Eigen::Vector2d::Zero();
             acting_point_velocity.x() = -distance_to_origin;  // Linear velocity
@@ -334,8 +191,6 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
 
             u(0) = acting_point_velocity.x();
             u(2) = acting_point_velocity.y();
-            
-            // ROS_WARN("Target vel : %f, %f", acting_point_velocity.x(), acting_point_velocity.y());
 
             // Normalize both vectors for alignment comparison
             Eigen::Vector2d normalized_target_velocity = acting_point_velocity.normalized();
@@ -348,9 +203,28 @@ mppi::cost_t PandaCost::compute_cost(const mppi::observation_t& x,
             double magnitude_difference = std::abs(acting_point_velocity.norm() - base_speed.norm());
 
             // Add costs based on alignment and magnitude
-            cost += 300 * (1 - direction_alignment) + 300 * magnitude_difference;
+            cost += (1 - direction_alignment) + magnitude_difference;
         }
     }
 
     return cost;
 }
+
+// Example reference publisher
+
+// rostopic pub /end_effector_pose_desired geometry_msgs/PoseStamped "header:
+//   seq: 0
+//   stamp:
+//     secs: 0
+//     nsecs: 0
+//   frame_id: 'world'
+// pose:
+//   position:
+//     x: 0.259
+//     y: 0.0
+//     z: 0.5
+//   orientation:
+//     x: 0.6995708346366882
+//     y: 0.7145636677742004
+//     z: -1.6931199553482656e-08
+//     w: 1.2759413969831712e-08"

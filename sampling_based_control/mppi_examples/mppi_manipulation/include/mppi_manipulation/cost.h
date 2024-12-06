@@ -53,7 +53,6 @@ class PandaCost : public mppi::Cost {
   Eigen::Vector3f acting_point_ = Eigen::Vector3f::Zero(); 
 
   std::vector<std::tuple<Eigen::Vector3f, double>> dbb_points_; // Add member variable for the DBB points
-  geometry_msgs::Twist calculated_velocity_; // Add member variable for storing the calculated velocity
   double dbb_distance_;
   bool first_search;
   bool first_entery = true;
@@ -96,12 +95,6 @@ class PandaCost : public mppi::Cost {
   std::shared_ptr<fcl::CollisionObjectd> createCollisionObjectFromMesh(const std::string& obj_file_path);
 
   double EEToDBB(const std::vector<std::shared_ptr<fcl::CollisionObjectd>>& fcl_objects);
-
-  Eigen::Vector3f EEToBase(const std::vector<std::shared_ptr<fcl::CollisionObjectd>>& fcl_objects);
-
-  Eigen::Vector3f findActingPoint(const std::vector<std::tuple<Eigen::Vector3f, double>>& dbb_points, const Eigen::Vector3f& ee_position);
-  
-  std::vector<std::tuple<Eigen::Vector3f, double>> loadAndSortDBBPoints(const std::string& filename);
   
 };
 

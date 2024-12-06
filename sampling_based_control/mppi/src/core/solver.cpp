@@ -479,6 +479,15 @@ void Solver::get_optimal_rollout(Rollout& r) {
 void Solver::swap_policies() {
   std::unique_lock<std::shared_mutex> lock(rollout_cache_mutex_);
   opt_roll_cache_ = opt_roll_;
+
+  // ROS_WARN_STREAM("Optimal Rollout Visualization:");
+
+  // for (size_t t = 0; t < opt_roll_.tt.size(); ++t) {
+  //   ROS_WARN_STREAM("Time step " << t << " (t = " << opt_roll_.tt[t] << "):");
+  //   if (t < opt_roll_.uu.size()) {
+  //     ROS_WARN_STREAM("  Input (uu): " << opt_roll_.uu[t].transpose());
+  //   }
+  // }
 }
 
 template <typename T>

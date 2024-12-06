@@ -27,7 +27,7 @@
 		    <!-- wheelSeparation>0.566</wheelSeparation --> <!-- real parameter value -->
 		    <wheelSeparation>0.462</wheelSeparation> <!-- works a bit better in Gazebo -->
 		    <wheelDiameter>0.22</wheelDiameter>
-		    <robotBaseFrame>${prefix}base_footprint</robotBaseFrame>
+		    <robotBaseFrame>base_link</robotBaseFrame>
 		    <torque>50</torque>
 		    <commandTopic>robotnik_base_control/cmd_vel</commandTopic>
 		    <odometryTopic>robotnik_base_control/odom</odometryTopic>
@@ -48,7 +48,7 @@
 					<yaw_velocity_p_gain>10000.0</yaw_velocity_p_gain>
 					<x_velocity_p_gain>10000.0</x_velocity_p_gain>
 					<y_velocity_p_gain>10000.0</y_velocity_p_gain>
-					<robotBaseFrame>${prefix}base_footprint</robotBaseFrame>
+					<robotBaseFrame>base_link</robotBaseFrame>
 					<commandWatchdog>1</commandWatchdog>
 					<odometryRate>50.0</odometryRate>
 					<publishOdometryTf>${publish_tf}</publishOdometryTf>
@@ -63,7 +63,7 @@
 				<odometryTopic>robotnik_base_control/odom</odometryTopic>
 				<odometryFrame>${prefix}odom</odometryFrame>
 				<odometryRate>50.0</odometryRate>
-				<robotBaseFrame>${prefix}base_footprint</robotBaseFrame>
+				<robotBaseFrame>base_link</robotBaseFrame>
 				<publishTF>${publish_tf}</publishTF>
 				<enableYAxis>true</enableYAxis>
 				</plugin>
@@ -82,7 +82,7 @@
 					<yaw_velocity_p_gain>10000.0</yaw_velocity_p_gain>
 					<x_velocity_p_gain>10000.0</x_velocity_p_gain>
 					<y_velocity_p_gain>0.0</y_velocity_p_gain>
-					<robotBaseFrame>${prefix}base_footprint</robotBaseFrame>
+					<robotBaseFrame>base_link</robotBaseFrame>
 					<commandWatchdog>1</commandWatchdog>
 					<odometryRate>50.0</odometryRate>
 					<publishOdometryTf>${publish_tf}</publishOdometryTf>
@@ -97,7 +97,7 @@
 				<odometryTopic>robotnik_base_control/odom</odometryTopic>
 				<odometryFrame>${prefix}odom</odometryFrame>
 				<odometryRate>50.0</odometryRate>
-				<robotBaseFrame>${prefix}base_footprint</robotBaseFrame>
+				<robotBaseFrame>base_link</robotBaseFrame>
 				<publishTF>${publish_tf}</publishTF>
 				<enableYAxis>false</enableYAxis>
 				</plugin>
@@ -115,7 +115,7 @@
 			 <yaw_velocity_p_gain>10000.0</yaw_velocity_p_gain>
 			 <x_velocity_p_gain>10000.0</x_velocity_p_gain>
 			 <y_velocity_p_gain>10000.0</y_velocity_p_gain>
-			 <robotBaseFrame>${prefix}base_footprint</robotBaseFrame>
+			 <robotBaseFrame>base_link</robotBaseFrame>
 			 <commandWatchdog>1</commandWatchdog>
 			 <odometryRate>50.0</odometryRate>
 			 <publishOdometryTf>${publish_tf}</publishOdometryTf>

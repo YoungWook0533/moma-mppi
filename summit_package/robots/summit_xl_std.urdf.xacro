@@ -47,7 +47,7 @@
 		<!-- Here we create the robot elements using the xacro:macros imported at the beggining of this file -->
 
 		<!-- Summit XL base -->
-		<xacro:summit_xl_base prefix="$(arg prefix)" publish_bf="true" hq="${hq}" />
+		<xacro:summit_xl_base prefix="$(arg prefix)" publish_bf="false" hq="${hq}" />
 
     <xacro:unless value="$(arg omni_wheels)">
   		<xacro:rubber_wheel prefix="$(arg prefix)front_right" parent="$(arg prefix)base_link" reflect="false" hq="${hq}">

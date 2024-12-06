@@ -8,12 +8,12 @@
     <!-- Imported elements -->
     <!-- ***************** -->
     <!-- First we import all posible elements defined in the urdf.xacro files. All these elements are defined as macro:xacros -->
-    <gazebo reference="base_footprint">
+    <!-- <gazebo reference="base_footprint">
         <material>Gazebo/Green</material>
         <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
             <robotNamespace>/</robotNamespace>
         </plugin>
-    </gazebo>
+    </gazebo> -->
     <!-- in kg-->
     <!-- in kg-->
     <!-- source en.wikipedia.org/wiki/List_of_moments_of_inertia-->
@@ -84,9 +84,9 @@
         </plugin> -->
         <plugin filename="libgazebo_ros_force_based_move.so" name="force_based_move">
             <commandTopic>robotnik_base_control/cmd_vel</commandTopic>
-            <odometryTopic>robotnik_base_control/odom</odometryTopic>
+            <!-- <odometryTopic>robotnik_base_control/odom</odometryTopic>
             <odometryFrame>summit_xl_odom</odometryFrame>
-            <odometryRate>50.0</odometryRate>
+            <odometryRate>50.0</odometryRate> -->
             <robotBaseFrame>base_link</robotBaseFrame>
             <cmdVelTimeOut>0.25</cmdVelTimeOut>
             <!-- Don't publish a transform: the controller does it. -->

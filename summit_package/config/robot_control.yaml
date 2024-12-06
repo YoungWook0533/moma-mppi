@@ -30,7 +30,7 @@ robotnik_base_control:
   cmd_vel_timeout: 50
 
   # Base frame_id
-  base_frame_id: summit_xl_base_footprint
+  base_frame_id: base_link
   odom_frame_id: summit_xl_odom
   enable_odom_tf: false
 
@@ -220,7 +220,7 @@ robotnik_base_control:
   cmd_vel_timeout: 50
 
   # Base frame_id
-  base_frame_id: summit_xl_base_footprint
+  base_frame_id: base_link
   odom_frame_id: summit_xl_odom
   enable_odom_tf: false
 
